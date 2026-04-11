@@ -188,36 +188,7 @@ async function logout(){
   }
 }
 
-/* PLACEHOLDERS TEMPORÁRIOS */
 function openDashboard(){
-  setActiveMenu('📊 Dashboard');
-  document.getElementById('contentTitle').textContent = '📊 Dashboard Financeiro';
-  document.getElementById('contentArea').innerHTML = `
-    <div class="box">
-      <strong>Dashboard</strong>
-      <div class="muted" style="margin-top:10px;">
-        A ligação ao backend será activada no passo seguinte.
-      </div>
-    </div>
-  `;
-}
-
-function openOperacoes(){
-  setActiveMenu('💰 Operações');
-  document.getElementById('contentTitle').textContent = '💰 Centro de Operações';
-  document.getElementById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
-}
-
-function openLancamentos(){
-  setActiveMenu('📝 Lançamentos');
-  document.getElementById('contentTitle').textContent = '📝 Gestão de Lançamentos';
-  document.getElementById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
-}
-
-function openApprovals(){
-  setActiveMenu('✓ Aprovações');
-  document.getElementById('contentTitle').textContent = '✓ Aprovações Pendentes';
-  document.getElefunction openDashboard(){
   setActiveMenu('📊 Dashboard');
   document.getElementById('contentTitle').textContent = '📊 Dashboard Financeiro';
 
@@ -287,7 +258,24 @@ function openApprovals(){
   });
 
   loadDashDeptos();
-}mentById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
+}
+
+function openOperacoes(){
+  setActiveMenu('💰 Operações');
+  document.getElementById('contentTitle').textContent = '💰 Centro de Operações';
+  document.getElementById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
+}
+
+function openLancamentos(){
+  setActiveMenu('📝 Lançamentos');
+  document.getElementById('contentTitle').textContent = '📝 Gestão de Lançamentos';
+  document.getElementById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
+}
+
+function openApprovals(){
+  setActiveMenu('✓ Aprovações');
+  document.getElementById('contentTitle').textContent = '✓ Aprovações Pendentes';
+  document.getElementById('contentArea').innerHTML = `<div class="box">Módulo em preparação.</div>`;
 }
 
 function openOrcamentos(){
