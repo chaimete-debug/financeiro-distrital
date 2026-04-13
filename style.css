@@ -790,3 +790,137 @@ hr.soft {
     width: 100%;
   }
 }
+
+/* ========== TOUR SEM ECRÃ ESCURO ========== */
+.tour-highlight {
+  position: relative;
+  z-index: 10000;
+  box-shadow: 0 0 0 4px #ffc107, 0 0 0 8px rgba(255,193,7,0.3);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: #fff !important;
+}
+
+.tour-tooltip {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.tour-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #123b7a, #1e4d8f);
+  color: #fff;
+}
+
+.tour-tooltip-icon {
+  font-size: 24px;
+}
+
+.tour-tooltip-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.tour-tooltip-body {
+  padding: 20px;
+  background: #fff;
+}
+
+.tour-tooltip-body p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #2c3e50;
+}
+
+.tour-progress {
+  font-size: 11px;
+  color: #6c757d;
+  text-align: right;
+  margin-top: 12px;
+}
+
+.tour-tooltip-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.tour-tooltip-footer button {
+  width: auto;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  min-height: unset;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tour-btn-next {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  border: none;
+}
+
+.tour-btn-prev {
+  background: #6c757d;
+  color: #fff;
+  border: none;
+}
+
+.tour-btn-skip {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+}
+
+.tour-btn-prev:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tour-btn-next:hover, .tour-btn-prev:hover, .tour-btn-skip:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.tour-overlay-light {
+  pointer-events: none;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsivo */
+@media (max-width: 680px) {
+  .tour-tooltip {
+    max-width: 280px !important;
+  }
+  
+  .tour-tooltip-footer button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .tour-tooltip-header h4 {
+    font-size: 14px;
+  }
+  
+  .tour-tooltip-body p {
+    font-size: 12px;
+  }
+}
+
+
+
+
+
