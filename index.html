@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Systema Financeiro Distrital</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="authView" class="auth-wrap">
+    <h1>🏦 Sistema Financeiro Distrital</h1>
+    <p>Insira as suas credenciais para aceder ao sistema.</p>
+
+    <label for="username">👤 Username</label>
+    <input id="username" type="text" autocomplete="off" placeholder="Digite o seu username">
+
+    <label for="password">🔒 Palavra-passe</label>
+    <input id="password" type="password" autocomplete="off" placeholder="Digite a sua palavra-passe">
+
+    <button id="btnLogin" onclick="login()">Iniciar sessão</button>
+
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <div id="appView" class="wrap hidden">
+    <div class="topbar">
+      <div>
+        <h1>📊 Dashboard Financeiro</h1>
+        <p id="welcomeText" class="muted">Bem-vindo ao sistema.</p>
+      </div>
+      <div class="actions">
+        <button class="info" onclick="openDashboard()">🔄 Actualizar</button>
+        <button class="danger" onclick="logout()">🚪 Terminar sessão</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="card-title">👤 Utilizador</div><div id="kpiUser" class="card-value">-</div></div>
+      <div class="card"><div class="card-title">🎯 Perfil</div><div id="kpiPerfil" class="card-value profile-value">-</div></div>
+      <div class="card"><div class="card-title">⛪ Igreja</div><div id="kpiIgreja" class="card-value">-</div></div>
+      <div class="card"><div class="card-title">💰 Saldo Actual</div><div id="kpiSaldo" class="card-value">0,00 MZN</div></div>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menu">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          Menu Principal
+        </button>
+        <h2 style="margin-bottom:10px;" class="desktop-only">📋 Menu Principal</h2>
+        <ul id="menuList" class="menu-list"></ul>
+      </div>
+
+      <div class="card">
+        <h2 id="contentTitle">Dashboard</h2>
+        <div id="contentArea" class="muted">A carregar...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TOUR MODAL ========== -->
+  <div id="tourModal" class="tour-modal hidden">
+    <div class="tour-container">
+      <div class="tour-header">
+        <h3>🎓 Tour Guiado do Sistema</h3>
+        <button class="tour-close" onclick="closeTour()">✕</button>
+      </div>
+      <div class="tour-content">
+        <div class="tour-slide active" data-step="0">
+          <div class="tour-icon">🏦</div>
+          <h4>Bem-vindo ao Sistema Financeiro Distrital</h4>
+          <p>Este tour vai explicar as principais funcionalidades do sistema.</p>
+          <div class="tour-progress">Passo 1 de 7</div>
+        </div>
+        <div class="tour-slide" data-step="1">
+          <div class="tour-icon">🔐</div>
+          <h4>Login e Autenticação</h4>
+          <p>Insira o seu username e palavra-passe para aceder ao sistema. As credenciais são fornecidas pelo administrador.</p>
+        </div>
+        <div class="tour-slide" data-step="2">
+          <div class="tour-icon">📊</div>
+          <h4>Dashboard</h4>
+          <p>O dashboard mostra:</p>
+          <ul>
+            <li>Receitas e despesas aprovadas</li>
+            <li>Saldo actual</li>
+            <li>Lançamentos pendentes por estado</li>
+            <li>Resumo por departamento</li>
+          </ul>
+        </div>
+        <div class="tour-slide" data-step="3">
+          <div class="tour-icon">📝</div>
+          <h4>Lançamentos</h4>
+          <p>Crie, edite e submeta lançamentos financeiros:</p>
+          <ul>
+            <li>Receitas ou despesas</li>
+            <li>Anexe comprovativos (PDF, imagens)</li>
+            <li>Guarde como rascunho ou submeta para aprovação</li>
+          </ul>
+        </div>
+        <div class="tour-slide" data-step="4">
+          <div class="tour-icon">✓</div>
+          <h4>Aprovações</h4>
+          <p>Fluxo de aprovação em 2 níveis:</p>
+          <ul>
+            <li><strong>Nível 1:</strong> Tesoureiro Distrital</li>
+            <li><strong>Nível 2:</strong> Administrador Geral</li>
+            <li>Lançamentos rejeitados requerem motivo</li>
+          </ul>
+        </div>
+        <div class="tour-slide" data-step="5">
+          <div class="tour-icon">📈</div>
+          <h4>Orçamentos e Relatórios</h4>
+          <p>Visualize:</p>
+          <ul>
+            <li>Orçamentos por rubrica e departamento</li>
+            <li>Relatórios financeiros filtráveis por mês/ano</li>
+            <li>Resumos de entradas, saídas e saldos</li>
+          </ul>
+        </div>
+        <div class="tour-slide" data-step="6">
+          <div class="tour-icon">⚙️</div>
+          <h4>Administração</h4>
+          <p>Gestão completa do sistema:</p>
+          <ul>
+            <li>Utilizadores e perfis</li>
+            <li>Departamentos e igrejas</li>
+            <li>Permissões e acessos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="tour-footer">
+        <button class="tour-prev" onclick="tourPrev()" disabled>◀ Anterior</button>
+        <button class="tour-next" onclick="tourNext()">Próximo ▶</button>
+        <button class="tour-skip" onclick="closeTour()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botões flutuantes -->
+  <button id="tourFab" class="tour-fab" onclick="startTour()" title="Tour guiado">🎓</button>
+  <button id="audioFab" class="audio-fab" onclick="playAudioExplanation()" title="Explicação em áudio">🔊</button>
+
+  <script src="config.js?v=8"></script>
+  <script src="app.js?v=8"></script>
+</body>
+</html>
