@@ -98,7 +98,7 @@ input, select, textarea {
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   box-sizing: border-box;
-  font-size: 16px; /* prevents iOS zoom on focus */
+  font-size: 16px;
   transition: all 0.3s ease;
   font-family: inherit;
   -webkit-appearance: none;
@@ -131,7 +131,7 @@ button {
   transition: all 0.3s ease;
   font-size: 16px;
   touch-action: manipulation;
-  min-height: 48px; /* accessible tap target */
+  min-height: 48px;
 }
 
 button:hover {
@@ -427,11 +427,184 @@ hr.soft {
 .badge-danger  { background: #f8d7da; color: #721c24; }
 .badge-info    { background: #d1ecf1; color: #0c5460; }
 
+/* ========== TOUR MODAL E FABS ========== */
+.tour-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.tour-container {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 480px;
+  width: 90%;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  animation: slideUp 0.3s ease;
+}
+
+.tour-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #123b7a, #1e4d8f);
+  color: #fff;
+}
+
+.tour-header h3 {
+  margin: 0;
+  color: #fff;
+}
+
+.tour-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+
+.tour-close:hover {
+  background: rgba(255,255,255,0.3);
+  transform: none;
+}
+
+.tour-content {
+  padding: 24px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.tour-slide {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.tour-slide.active {
+  display: block;
+}
+
+.tour-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.tour-slide h4 {
+  font-size: 20px;
+  color: #123b7a;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.tour-slide p, .tour-slide ul {
+  color: #495057;
+  line-height: 1.5;
+}
+
+.tour-slide ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.tour-slide li {
+  margin: 8px 0;
+}
+
+.tour-progress {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.tour-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.tour-footer button {
+  width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 14px;
+  min-height: unset;
+}
+
+.tour-prev, .tour-next {
+  flex: 1;
+}
+
+.tour-skip {
+  background: #6c757d;
+}
+
+.tour-prev:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tour-fab, .audio-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #123b7a, #1e4d8f);
+  color: #fff;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  border: none;
+}
+
+.audio-fab {
+  bottom: 90px;
+  background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.tour-fab:hover, .audio-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.highlight-element {
+  position: relative;
+  z-index: 10001;
+  box-shadow: 0 0 0 4px #ffc107, 0 0 0 8px rgba(255,193,7,0.3);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
 /* ════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ════════════════════════════════════════════════════ */
 
-/* ── TABLET ≤ 900px ───────────────────────────────── */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 220px 1fr;
@@ -447,15 +620,12 @@ hr.soft {
   }
 }
 
-/* ── MOBILE ≤ 680px ───────────────────────────────── */
 @media (max-width: 680px) {
-
   body {
     padding: 0;
     background: #f0f2f5;
   }
 
-  /* Auth form fills the screen on mobile */
   .auth-wrap {
     margin: 0;
     min-height: 100vh;
@@ -467,7 +637,6 @@ hr.soft {
     justify-content: center;
   }
 
-  /* App wrapper fills screen */
   .wrap {
     border-radius: 0;
     padding: 12px;
@@ -475,7 +644,6 @@ hr.soft {
     min-height: 100vh;
   }
 
-  /* Top bar stacks title & buttons */
   .topbar {
     flex-direction: column;
     align-items: stretch;
@@ -493,7 +661,6 @@ hr.soft {
     font-size: 13px;
   }
 
-  /* KPI cards: 2 columns */
   .grid {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -513,26 +680,22 @@ hr.soft {
     font-size: 10px;
   }
 
-  /* Show hamburger, hide sidebar card heading */
   .menu-toggle {
     display: flex;
   }
 
-  /* Sidebar collapses into a slide-down drawer */
   .layout {
     grid-template-columns: 1fr;
     gap: 0;
     margin-top: 12px;
   }
 
-  /* Sidebar card */
   .layout > .card:first-child {
     border-radius: 12px;
     padding: 12px;
     margin-bottom: 12px;
   }
 
-  /* Menu list hidden by default on mobile */
   .layout > .card:first-child .menu-list {
     display: none;
     animation: slideDown 0.25s ease;
@@ -542,7 +705,6 @@ hr.soft {
     display: block;
   }
 
-  /* Menu items larger tap targets */
   .menu-list li {
     padding: 14px 14px;
     font-size: 15px;
@@ -550,13 +712,11 @@ hr.soft {
     min-height: 50px;
   }
 
-  /* Content card */
   .layout > .card:last-child {
     border-radius: 12px;
     padding: 14px;
   }
 
-  /* Tables scroll horizontally */
   .box > div[style*="overflow"],
   .overflow-table {
     overflow-x: auto;
@@ -572,7 +732,6 @@ hr.soft {
     font-size: 13px;
   }
 
-  /* Section grid single column */
   .section-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -592,7 +751,6 @@ hr.soft {
     margin-bottom: 10px;
   }
 
-  /* Row action buttons stack */
   .row-actions {
     flex-direction: column;
     gap: 5px;
@@ -602,9 +760,23 @@ hr.soft {
     width: 100%;
     text-align: center;
   }
+  
+  .tour-fab, .audio-fab {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+  
+  .audio-fab {
+    bottom: 80px;
+  }
+  
+  .tour-container {
+    width: 95%;
+    max-height: 90vh;
+  }
 }
 
-/* ── SMALL MOBILE ≤ 380px ─────────────────────────── */
 @media (max-width: 380px) {
   .grid {
     grid-template-columns: 1fr;
