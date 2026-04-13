@@ -1462,46 +1462,259 @@ function toggleIgreja(id){
 }
 
 /* ══════════════════════════════════════════════════════
-   TOUR GUIADO E ÁUDIO
+   TOUR GUIADO (sem escurecer ecrã)
 ══════════════════════════════════════════════════════ */
 
 let currentStep = 0;
-const totalSteps = 7;
+let tourActive = false;
+let currentHighlightElement = null;
+
+// Passos do tour com os elementos a destacar
+const tourSteps = [
+  {
+    title: "🎓 Bem-vindo ao Sistema Financeiro Distrital",
+    description: "Este tour vai guiá-lo pelas principais funcionalidades do sistema. Clique em 'Próximo' para continuar.",
+    element: null,
+    position: "center"
+  },
+  {
+    title: "📊 Dashboard",
+    description: "Aqui pode ver o resumo financeiro: receitas, despesas, saldo e lançamentos pendentes. Os cards coloridos mostram os valores actualizados.",
+    element: () => document.querySelector('.grid'),
+    position: "top"
+  },
+  {
+    title: "📝 Lançamentos",
+    description: "Nesta secção pode criar novos lançamentos (receitas ou despesas), anexar comprovativos e submeter para aprovação.",
+    element: () => {
+      const items = document.querySelectorAll('#menuList li');
+      return Array.from(items).find(li => li.textContent.includes('Lançamento'));
+    },
+    position: "right"
+  },
+  {
+    title: "✓ Aprovações",
+    description: "Acompanhe o fluxo de aprovação em 2 níveis: Tesoureiro Distrital (Nível 1) e Administrador Geral (Nível 2).",
+    element: () => {
+      const items = document.querySelectorAll('#menuList li');
+      return Array.from(items).find(li => li.textContent.includes('Aprovação'));
+    },
+    position: "right"
+  },
+  {
+    title: "📈 Orçamentos e Relatórios",
+    description: "Visualize orçamentos por rubrica e gere relatórios financeiros filtrando por mês e ano.",
+    element: () => {
+      const items = document.querySelectorAll('#menuList li');
+      return Array.from(items).find(li => li.textContent.includes('Orçamento'));
+    },
+    position: "right"
+  },
+  {
+    title: "⚙️ Administração",
+    description: "Gestão completa de utilizadores, perfis, departamentos e igrejas. Apenas para administradores.",
+    element: () => {
+      const items = document.querySelectorAll('#menuList li');
+      return Array.from(items).find(li => li.textContent.includes('Administração'));
+    },
+    position: "right"
+  },
+  {
+    title: "🎉 Tour Concluído!",
+    description: "Agora já conhece as principais funcionalidades. Explore o sistema à vontade. Use o botão 🔊 para ouvir explicação detalhada.",
+    element: null,
+    position: "center"
+  }
+];
 
 function startTour() {
-  const modal = document.getElementById('tourModal');
-  if (!modal) return;
-  modal.classList.remove('hidden');
+  if (tourActive) return;
+  tourActive = true;
   currentStep = 0;
   showTourStep(0);
-  highlightUITour(0);
 }
 
 function closeTour() {
-  const modal = document.getElementById('tourModal');
-  if (modal) modal.classList.add('hidden');
-  document.querySelectorAll('.highlight-element').forEach(el => {
-    el.classList.remove('highlight-element');
-  });
+  tourActive = false;
+  // Remover tooltip se existir
+  const existingTooltip = document.querySelector('.tour-tooltip');
+  if (existingTooltip) existingTooltip.remove();
+  // Remover highlight
+  if (currentHighlightElement) {
+    currentHighlightElement.classList.remove('tour-highlight');
+    currentHighlightElement = null;
+  }
+  // Remover overlay se existir (apenas para central)
+  const overlay = document.querySelector('.tour-overlay');
+  if (overlay) overlay.remove();
 }
 
 function showTourStep(step) {
-  const slides = document.querySelectorAll('.tour-slide');
-  slides.forEach((slide, idx) => {
-    slide.classList.toggle('active', idx === step);
-  });
-  const prevBtn = document.querySelector('.tour-prev');
-  const nextBtn = document.querySelector('.tour-next');
-  if (prevBtn) prevBtn.disabled = step === 0;
-  if (nextBtn) nextBtn.textContent = step === totalSteps - 1 ? '✅ Concluir' : 'Próximo ▶';
-  narrateStep(step);
+  // Remover tooltip anterior
+  const existingTooltip = document.querySelector('.tour-tooltip');
+  if (existingTooltip) existingTooltip.remove();
+  
+  // Remover highlight anterior
+  if (currentHighlightElement) {
+    currentHighlightElement.classList.remove('tour-highlight');
+    currentHighlightElement = null;
+  }
+  
+  // Remover overlay
+  const overlay = document.querySelector('.tour-overlay');
+  if (overlay) overlay.remove();
+  
+  const stepData = tourSteps[step];
+  if (!stepData) return;
+  
+  // Narrar o passo
+  narrateStepMZ(step);
+  
+  if (stepData.element === null || step === 0 || step === tourSteps.length - 1) {
+    // Modo central (sem elemento específico)
+    showCenterTooltip(stepData.title, stepData.description, step);
+  } else {
+    // Destacar elemento específico
+    const element = stepData.element();
+    if (element && element.isConnected) {
+      currentHighlightElement = element;
+      element.classList.add('tour-highlight');
+      showTooltipNearElement(element, stepData.title, stepData.description, step, stepData.position);
+    } else {
+      // Se elemento não existe, mostra central
+      showCenterTooltip(stepData.title, stepData.description, step);
+    }
+  }
+}
+
+function showCenterTooltip(title, description, step) {
+  // Criar um overlay suave (não muito escuro) apenas para dar foco
+  const overlay = document.createElement('div');
+  overlay.className = 'tour-overlay-light';
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 9998;
+    pointer-events: none;
+  `;
+  document.body.appendChild(overlay);
+  
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tour-tooltip tour-tooltip-center';
+  tooltip.innerHTML = `
+    <div class="tour-tooltip-header">
+      <span class="tour-tooltip-icon">${title.charAt(0)}</span>
+      <h4>${title}</h4>
+    </div>
+    <div class="tour-tooltip-body">
+      <p>${description}</p>
+      <div class="tour-progress">Passo ${step + 1} de ${tourSteps.length}</div>
+    </div>
+    <div class="tour-tooltip-footer">
+      <button class="tour-btn-skip" onclick="closeTour()">✖ Fechar</button>
+      <button class="tour-btn-prev" ${step === 0 ? 'disabled' : ''} onclick="tourPrev()">◀ Anterior</button>
+      <button class="tour-btn-next" onclick="tourNext()">${step === tourSteps.length - 1 ? '✅ Concluir' : 'Próximo ▶'}</button>
+    </div>
+  `;
+  tooltip.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 20px;
+    max-width: 380px;
+    width: 85%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    z-index: 9999;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+  `;
+  document.body.appendChild(tooltip);
+  
+  // Guardar overlay para remover depois
+  window.currentOverlay = overlay;
+}
+
+function showTooltipNearElement(element, title, description, step, position = 'right') {
+  const rect = element.getBoundingClientRect();
+  
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tour-tooltip';
+  tooltip.innerHTML = `
+    <div class="tour-tooltip-header">
+      <span class="tour-tooltip-icon">🎓</span>
+      <h4>${title}</h4>
+    </div>
+    <div class="tour-tooltip-body">
+      <p>${description}</p>
+      <div class="tour-progress">Passo ${step + 1} de ${tourSteps.length}</div>
+    </div>
+    <div class="tour-tooltip-footer">
+      <button class="tour-btn-skip" onclick="closeTour()">✖ Fechar</button>
+      <button class="tour-btn-prev" onclick="tourPrev()">◀ Anterior</button>
+      <button class="tour-btn-next" onclick="tourNext()">Próximo ▶</button>
+    </div>
+  `;
+  
+  // Posicionar tooltip
+  let top, left;
+  switch (position) {
+    case 'right':
+      top = rect.top + (rect.height / 2) - 60;
+      left = rect.right + 15;
+      if (left + 320 > window.innerWidth) {
+        left = rect.left - 335;
+      }
+      break;
+    case 'left':
+      top = rect.top + (rect.height / 2) - 60;
+      left = rect.left - 335;
+      break;
+    case 'top':
+      top = rect.top - 130;
+      left = rect.left + (rect.width / 2) - 160;
+      break;
+    case 'bottom':
+      top = rect.bottom + 15;
+      left = rect.left + (rect.width / 2) - 160;
+      break;
+    default:
+      top = rect.top;
+      left = rect.right + 15;
+  }
+  
+  // Ajustar para não sair do ecrã
+  top = Math.max(10, Math.min(top, window.innerHeight - 250));
+  left = Math.max(10, Math.min(left, window.innerWidth - 330));
+  
+  tooltip.style.cssText = `
+    position: fixed;
+    top: ${top}px;
+    left: ${left}px;
+    background: #fff;
+    border-radius: 20px;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    z-index: 9999;
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  document.body.appendChild(tooltip);
+  
+  // Scroll para o elemento se necessário
+  if (rect.top < 50 || rect.bottom > window.innerHeight - 50) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 function tourNext() {
-  if (currentStep < totalSteps - 1) {
+  if (currentStep < tourSteps.length - 1) {
     currentStep++;
     showTourStep(currentStep);
-    highlightUITour(currentStep);
   } else {
     closeTour();
     showMessage('🎓 Tour concluído! Explore o sistema à vontade.', true);
@@ -1512,104 +1725,124 @@ function tourPrev() {
   if (currentStep > 0) {
     currentStep--;
     showTourStep(currentStep);
-    highlightUITour(currentStep);
   }
 }
 
-function highlightUITour(step) {
-  document.querySelectorAll('.highlight-element').forEach(el => {
-    el.classList.remove('highlight-element');
-  });
-  
-  const highlights = {
-    2: () => {
-      const dashboardCards = document.querySelectorAll('.grid .card');
-      dashboardCards.forEach(card => card.classList.add('highlight-element'));
-      setTimeout(() => {
-        dashboardCards.forEach(card => card.classList.remove('highlight-element'));
-      }, 3000);
-    },
-    3: () => {
-      const menuItems = document.querySelectorAll('#menuList li');
-      const lancamentoItem = Array.from(menuItems).find(li => li.textContent.includes('Lançamento'));
-      if (lancamentoItem) lancamentoItem.classList.add('highlight-element');
-    },
-    4: () => {
-      const menuItems = document.querySelectorAll('#menuList li');
-      const aprovItem = Array.from(menuItems).find(li => li.textContent.includes('Aprovação'));
-      if (aprovItem) aprovItem.classList.add('highlight-element');
-    },
-    6: () => {
-      const menuItems = document.querySelectorAll('#menuList li');
-      const adminItem = Array.from(menuItems).find(li => li.textContent.includes('Administração'));
-      if (adminItem) adminItem.classList.add('highlight-element');
-    }
-  };
-  
-  if (highlights[step]) highlights[step]();
-}
-
-function narrateStep(step) {
-  const texts = [
-    "Bem-vindo ao Sistema Financeiro Distrital. Este tour vai explicar as principais funcionalidades.",
-    "Faça login com as suas credenciais para aceder ao sistema.",
-    "No Dashboard, acompanhe receitas, despesas, saldo e lançamentos pendentes.",
-    "Na secção Lançamentos, crie novos registos financeiros e anexe comprovativos.",
-    "Nas Aprovações, acompanhe o fluxo de aprovação em dois níveis.",
-    "Nos Orçamentos e Relatórios, analise dados financeiros detalhados.",
-    "Na Administração, gestione utilizadores, perfis, departamentos e igrejas."
+function narrateStepMZ(step) {
+  const textsMZ = [
+    "Bem-vindo ao Sistema Financeiro Distrital de Moçambique. Este tour vai explicar as principais funcionalidades do sistema.",
+    "No painel de controle, acompanhe as receitas, despesas, saldo e lançamentos pendentes da sua igreja ou departamento.",
+    "Na secção de Lançamentos, pode criar novos registos financeiros, anexar comprovativos e submeter para aprovação.",
+    "Nas Aprovações, o fluxo funciona em dois níveis: Tesoureiro Distrital aprova primeiro, depois o Administrador Geral.",
+    "Nos Orçamentos e Relatórios, pode visualizar orçamentos por rubrica e gerar relatórios financeiros detalhados.",
+    "Na Administração, gere utilizadores, perfis, departamentos e igrejas. Esta secção é apenas para administradores.",
+    "Parabéns! Concluiu o tour. Agora pode explorar o sistema. Clique no botão verde para ouvir explicação completa."
   ];
   
-  if (window.speechSynthesis && texts[step]) {
-    const utterance = new SpeechSynthesisUtterance(texts[step]);
-    utterance.lang = 'pt-PT';
-    utterance.rate = 0.9;
+  if (window.speechSynthesis && textsMZ[step]) {
+    // Parar qualquer narração anterior
     window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(textsMZ[step]);
+    utterance.lang = 'pt-MZ'; // Português de Moçambique
+    utterance.rate = 0.85;
+    utterance.pitch = 1.0;
+    
+    // Tentar encontrar voz portuguesa
+    const setVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT' || v.lang.startsWith('pt'));
+      if (ptVoice) utterance.voice = ptVoice;
+    };
+    setVoice();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = setVoice;
+    }
+    
     window.speechSynthesis.speak(utterance);
   }
 }
 
-let isSpeaking = false;
+/* ══════════════════════════════════════════════════════
+   ÁUDIO EXPLICATIVO (Português de Moçambique)
+══════════════════════════════════════════════════════ */
+
+let isSpeakingMZ = false;
 
 function playAudioExplanation() {
-  if (isSpeaking) {
+  if (isSpeakingMZ) {
     window.speechSynthesis.cancel();
-    isSpeaking = false;
+    isSpeakingMZ = false;
     const btn = document.getElementById('audioFab');
     if (btn) {
       btn.style.opacity = '1';
       btn.innerHTML = '🔊';
+      btn.title = 'Explicação em áudio';
     }
     return;
   }
   
-  const explanationText = `Bem-vindo ao Sistema Financeiro Distrital. Este sistema gere finanças de igrejas e departamentos a nível distrital. O fluxo principal: primeiro, faça login com as suas credenciais. No Dashboard, vê receitas, despesas, saldo e pendentes. Nos Lançamentos, crie receitas ou despesas, anexe comprovativos e submeta para aprovação. As Aprovações têm dois níveis: Tesoureiro Distrital aprova primeiro, depois Administrador Geral. Nos Orçamentos e Relatórios, analise dados financeiros. Na Administração, gestione utilizadores, perfis, departamentos e igrejas. Cada perfil tem permissões específicas. Para mais detalhes, contacte o suporte.`;
+  const explanationTextMZ = `
+    Bem-vindo ao Sistema Financeiro Distrital de Moçambique.
+    
+    Este sistema foi desenvolvido para gerir as finanças de igrejas e departamentos a nível distrital.
+    
+    O fluxo principal de utilização é o seguinte:
+    
+    Primeiro: faça login com o seu username e palavra-passe fornecidos pelo administrador.
+    
+    Segundo: No Dashboard, pode visualizar o resumo financeiro incluindo receitas aprovadas, despesas aprovadas, saldo actual, e a quantidade de lançamentos pendentes, rascunhos e rejeitados.
+    
+    Terceiro: Na secção de Lançamentos, pode criar novos registos. Escolha entre receita ou despesa, preencha a data, valor, departamento, rubrica, grupo, conta e descrição. Pode anexar comprovativos em formato PDF ou imagem com tamanho máximo de 10 megabytes. Depois pode guardar como rascunho ou submeter directamente para aprovação.
+    
+    Quarto: Nas Aprovações, o sistema usa um fluxo de dois níveis. O Tesoureiro Distrital faz a primeira aprovação. Se aprovado, o Administrador Geral faz a segunda aprovação. Se for rejeitado, é necessário indicar o motivo.
+    
+    Quinto: Nos Orçamentos, pode visualizar os valores orçados por rubrica, departamento e igreja.
+    
+    Sexto: Nos Relatórios, pode gerar relatórios financeiros por departamento ou por rubrica, filtrando por mês e ano.
+    
+    Sétimo: Na Administração, apenas utilizadores com perfil de administrador podem gerir utilizadores, perfis, departamentos e igrejas.
+    
+    Cada perfil tem permissões específicas: Tesoureiro Local vê apenas a sua igreja. Responsável Departamental vê apenas o seu departamento. Tesoureiro Distrital e Administrador Geral vêem todos os dados.
+    
+    Para mais informações, contacte o suporte técnico.
+  `;
   
   if (!window.speechSynthesis) {
-    mostrarErro('O seu navegador não suporta síntese de voz.');
+    mostrarErro('O seu navegador não suporta síntese de voz. Use Chrome, Edge ou Safari.');
     return;
   }
   
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(explanationText);
-  utterance.lang = 'pt-PT';
-  utterance.rate = 0.9;
+  const utterance = new SpeechSynthesisUtterance(explanationTextMZ);
+  utterance.lang = 'pt-MZ';
+  utterance.rate = 0.85;
   utterance.pitch = 1.0;
   utterance.volume = 1;
   
+  // Configurar voz portuguesa
+  const setVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT' || (v.lang.startsWith('pt') && v.lang.includes('PT')));
+    if (ptVoice) utterance.voice = ptVoice;
+  };
+  setVoice();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = setVoice;
+  }
+  
   utterance.onstart = () => {
-    isSpeaking = true;
+    isSpeakingMZ = true;
     const btn = document.getElementById('audioFab');
     if (btn) {
       btn.style.opacity = '0.7';
       btn.innerHTML = '⏹️';
       btn.title = 'Parar explicação';
     }
-    showMessage('🎤 A explicar o funcionamento do sistema...', true);
+    showMessage('🎤 A explicar o funcionamento do sistema em Português de Moçambique...', true);
   };
   
   utterance.onend = () => {
-    isSpeaking = false;
+    isSpeakingMZ = false;
     const btn = document.getElementById('audioFab');
     if (btn) {
       btn.style.opacity = '1';
@@ -1619,24 +1852,35 @@ function playAudioExplanation() {
   };
   
   utterance.onerror = () => {
-    isSpeaking = false;
+    isSpeakingMZ = false;
     mostrarErro('Erro ao reproduzir áudio. Tente novamente.');
   };
   
   window.speechSynthesis.speak(utterance);
 }
 
-let hasShownWelcome = false;
+let hasShownWelcomeMZ = false;
 
-function showWelcomeAudio() {
-  if (hasShownWelcome) return;
-  hasShownWelcome = true;
+function showWelcomeAudioMZ() {
+  if (hasShownWelcomeMZ) return;
+  hasShownWelcomeMZ = true;
   
   setTimeout(() => {
-    const welcomeMsg = `Bem-vindo ao Sistema Financeiro Distrital. Clique no botão verde com o altifalante para ouvir uma explicação completa do sistema.`;
+    const welcomeMsg = `Bem-vindo ao Sistema Financeiro Distrital de Moçambique. Clique no botão verde com o altifalante para ouvir uma explicação completa do sistema em Português de Moçambique.`;
     const utterance = new SpeechSynthesisUtterance(welcomeMsg);
-    utterance.lang = 'pt-PT';
-    utterance.rate = 0.9;
+    utterance.lang = 'pt-MZ';
+    utterance.rate = 0.85;
+    
+    const setVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT');
+      if (ptVoice) utterance.voice = ptVoice;
+    };
+    setVoice();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = setVoice;
+    }
+    
     window.speechSynthesis.speak(utterance);
   }, 2000);
 }
