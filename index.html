@@ -43,6 +43,7 @@
 
     <div class="layout">
       <div class="card">
+        <!-- Hamburger toggle (visible on mobile only) -->
         <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menu">
           <div class="hamburger">
             <span></span>
@@ -61,89 +62,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ========== TOUR MODAL ========== -->
-  <div id="tourModal" class="tour-modal hidden">
-    <div class="tour-container">
-      <div class="tour-header">
-        <h3>🎓 Tour Guiado do Sistema</h3>
-        <button class="tour-close" onclick="closeTour()">✕</button>
-      </div>
-      <div class="tour-content">
-        <div class="tour-slide active" data-step="0">
-          <div class="tour-icon">🏦</div>
-          <h4>Bem-vindo ao Sistema Financeiro Distrital</h4>
-          <p>Este tour vai explicar as principais funcionalidades do sistema.</p>
-          <div class="tour-progress">Passo 1 de 7</div>
-        </div>
-        <div class="tour-slide" data-step="1">
-          <div class="tour-icon">🔐</div>
-          <h4>Login e Autenticação</h4>
-          <p>Insira o seu username e palavra-passe para aceder ao sistema. As credenciais são fornecidas pelo administrador.</p>
-        </div>
-        <div class="tour-slide" data-step="2">
-          <div class="tour-icon">📊</div>
-          <h4>Dashboard</h4>
-          <p>O dashboard mostra:</p>
-          <ul>
-            <li>Receitas e despesas aprovadas</li>
-            <li>Saldo actual</li>
-            <li>Lançamentos pendentes por estado</li>
-            <li>Resumo por departamento</li>
-          </ul>
-        </div>
-        <div class="tour-slide" data-step="3">
-          <div class="tour-icon">📝</div>
-          <h4>Lançamentos</h4>
-          <p>Crie, edite e submeta lançamentos financeiros:</p>
-          <ul>
-            <li>Receitas ou despesas</li>
-            <li>Anexe comprovativos (PDF, imagens)</li>
-            <li>Guarde como rascunho ou submeta para aprovação</li>
-          </ul>
-        </div>
-        <div class="tour-slide" data-step="4">
-          <div class="tour-icon">✓</div>
-          <h4>Aprovações</h4>
-          <p>Fluxo de aprovação em 2 níveis:</p>
-          <ul>
-            <li><strong>Nível 1:</strong> Tesoureiro Distrital</li>
-            <li><strong>Nível 2:</strong> Administrador Geral</li>
-            <li>Lançamentos rejeitados requerem motivo</li>
-          </ul>
-        </div>
-        <div class="tour-slide" data-step="5">
-          <div class="tour-icon">📈</div>
-          <h4>Orçamentos e Relatórios</h4>
-          <p>Visualize:</p>
-          <ul>
-            <li>Orçamentos por rubrica e departamento</li>
-            <li>Relatórios financeiros filtráveis por mês/ano</li>
-            <li>Resumos de entradas, saídas e saldos</li>
-          </ul>
-        </div>
-        <div class="tour-slide" data-step="6">
-          <div class="tour-icon">⚙️</div>
-          <h4>Administração</h4>
-          <p>Gestão completa do sistema:</p>
-          <ul>
-            <li>Utilizadores e perfis</li>
-            <li>Departamentos e igrejas</li>
-            <li>Permissões e acessos</li>
-          </ul>
-        </div>
-      </div>
-      <div class="tour-footer">
-        <button class="tour-prev" onclick="tourPrev()" disabled>◀ Anterior</button>
-        <button class="tour-next" onclick="tourNext()">Próximo ▶</button>
-        <button class="tour-skip" onclick="closeTour()">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Botões flutuantes -->
-  <button id="tourFab" class="tour-fab" onclick="startTour()" title="Tour guiado">🎓</button>
-  <button id="audioFab" class="audio-fab" onclick="playAudioExplanation()" title="Explicação em áudio">🔊</button>
 
   <script src="config.js?v=8"></script>
   <script src="app.js?v=8"></script>
