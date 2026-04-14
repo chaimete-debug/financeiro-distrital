@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Demo — Sistema Financeiro Distrital</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --azul:#123b7a; --azul2:#1e4d8f; --azul3:#e8f0fe;
+  --verde:#28a745; --verde2:#d4edda;
+  --vermelho:#dc3545; --vermelho2:#f8d7da;
+  --laranja:#856404; --laranja2:#fff3cd;
+  --cinza:#6c757d; --cinza2:#f8f9fa;
+  --texto:#2c3e50; --borda:#dee2e6;
+  --branco:#ffffff;
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e1a;}
+
+/* ── INTRO SCREEN ── */
+#intro{
+  position:fixed;inset:0;z-index:1000;
+  background:linear-gradient(135deg,#0a0e1a 0%,#0d1b3e 50%,#0a0e1a 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s ease;
+}
+#intro h1{
+  font-family:'Sora',sans-serif;font-size:clamp(24px,5vw,48px);font-weight:700;
+  color:#fff;text-align:center;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 0%,#93c5fd 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+#intro p{font-family:'Sora',sans-serif;font-size:16px;color:#93c5fd;text-align:center;margin-bottom:40px;opacity:0.8;}
+#startBtn{
+  font-family:'Sora',sans-serif;padding:16px 40px;font-size:16px;font-weight:700;
+  background:linear-gradient(135deg,#123b7a,#1e4d8f);color:#fff;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 0 40px rgba(18,59,122,0.5);
+  transition:all 0.3s ease;
+}
+#startBtn:hover{transform:translateY(-3px);box-shadow:0 0 60px rgba(18,59,122,0.8);}
+.intro-badge{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:30px;padding:8px 20px;font-family:'Sora',sans-serif;
+  font-size:12px;color:#93c5fd;margin-bottom:32px;
+}
+.intro-badge span{width:8px;height:8px;border-radius:50%;background:#28a745;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ── DEMO FRAME ── */
+#demoFrame{
+  position:fixed;inset:0;z-index:100;
+  display:none;flex-direction:column;
+  background:#f0f2f5;
+}
+
+/* ── TOP BAR DA DEMO ── */
+.demo-topbar{
+  background:#0a0e1a;height:36px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;flex-shrink:0;
+}
+.demo-topbar-left{display:flex;align-items:center;gap:8px;}
+.demo-dot{width:12px;height:12px;border-radius:50%;}
+.demo-dot.red{background:#ff5f57;}
+.demo-dot.yellow{background:#febc2e;}
+.demo-dot.green{background:#28c840;}
+.demo-url{
+  background:rgba(255,255,255,0.1);border-radius:6px;
+  padding:3px 12px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:#93c5fd;
+}
+.demo-topbar-right{font-family:'Sora',sans-serif;font-size:11px;color:#4a5568;}
+
+/* ── SISTEMA SIMULADO ── */
+#sistema{
+  flex:1;overflow:hidden;position:relative;
+  background:#fff;border:none;
+}
+
+/* SISTEMA INTERNO */
+.s-wrap{
+  max-width:1200px;margin:0 auto;padding:16px;
+  font-family:'Sora',sans-serif;height:100%;overflow-y:auto;
+}
+
+.s-topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:14px;border-bottom:2px solid var(--borda);
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+}
+.s-topbar h1{font-size:20px;color:var(--azul);font-weight:700;}
+.s-topbar p{font-size:13px;color:var(--cinza);}
+.s-topbar-btns{display:flex;gap:8px;}
+.s-btn{
+  padding:9px 16px;border-radius:10px;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:'Sora',sans-serif;
+  transition:all 0.2s;
+}
+.s-btn.info{background:linear-gradient(135deg,#17a2b8,#138496);color:#fff;}
+.s-btn.danger{background:linear-gradient(135deg,#dc3545,#c82333);color:#fff;}
+.s-btn.success{background:linear-gradient(135deg,#28a745,#218838);color:#fff;}
+.s-btn.secondary{background:linear-gradient(135deg,#6c757d,#5a6268);color:#fff;}
+
+.s-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.s-kpi{
+  background:linear-gradient(135deg,#fff,#f8f9fa);
+  border:1px solid var(--borda);border-radius:12px;padding:14px;
+}
+.s-kpi-title{font-size:10px;color:var(--cinza);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px;}
+.s-kpi-val{font-size:clamp(13px,2vw,20px);font-weight:700;color:var(--azul);}
+
+.s-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;}
+
+.s-sidebar{background:linear-gradient(135deg,#fff,#f8f9fa);border:1px solid var(--borda);border-radius:12px;padding:12px;}
+.s-sidebar h2{font-size:12px;color:var(--cinza);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--borda);}
+.s-menu-item{
+  padding:11px 12px;border-radius:8px;font-size:13px;color:#495057;
+  margin-bottom:3px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;
+}
+.s-menu-item:hover{background:var(--azul3);}
+.s-menu-item.active{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;}
+
+.s-content{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:16px;min-height:400px;}
+.s-content h2{font-size:16px;color:var(--texto);margin-bottom:14px;}
+
+.s-table{width:100%;border-collapse:collapse;font-size:12px;}
+.s-table th{background:var(--cinza2);padding:9px 10px;text-align:left;font-weight:600;color:#495057;border-bottom:2px solid var(--borda);}
+.s-table td{padding:9px 10px;border-bottom:1px solid var(--borda);}
+.s-table tr:hover td{background:var(--cinza2);}
+
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;}
+.badge.success{background:var(--verde2);color:#155724;}
+.badge.warning{background:var(--laranja2);color:var(--laranja);}
+.badge.info{background:var(--azul3);color:var(--azul);}
+.badge.danger{background:var(--vermelho2);color:#721c24;}
+
+.s-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.s-label{display:block;font-size:11px;font-weight:600;color:var(--texto);margin-bottom:4px;margin-top:10px;}
+.s-input{
+  width:100%;padding:9px 12px;border:2px solid var(--borda);border-radius:8px;
+  font-size:12px;font-family:'Sora',sans-serif;color:var(--texto);
+  transition:all 0.2s;
+}
+.s-input:focus{border-color:var(--azul);outline:none;}
+.s-input.typing{border-color:var(--azul);background:var(--azul3);}
+
+.s-kpis-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.s-kpi-sm{background:var(--cinza2);border-radius:8px;padding:10px;text-align:center;}
+.s-kpi-sm .val{font-size:16px;font-weight:700;margin-bottom:2px;}
+.s-kpi-sm .lbl{font-size:10px;color:var(--cinza);}
+
+/* ── NARRATION BOX ── */
+#narration{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255,255,255,0.1);
+  padding:14px 24px;display:flex;align-items:center;gap:16px;
+  transform:translateY(100%);transition:transform 0.4s ease;
+}
+#narration.visible{transform:translateY(0);}
+.narr-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--azul),var(--azul2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.narr-text{
+  font-family:'Sora',sans-serif;font-size:13px;color:#e2e8f0;
+  line-height:1.5;flex:1;
+}
+.narr-text strong{color:#93c5fd;}
+.narr-progress{display:flex;gap:4px;align-items:center;}
+.narr-dot{
+  width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.3);
+  transition:all 0.3s;
+}
+.narr-dot.active{background:#93c5fd;width:20px;border-radius:3px;}
+.narr-dot.done{background:rgba(255,255,255,0.6);}
+
+/* ── CURSOR VIRTUAL ── */
+#cursor{
+  position:fixed;z-index:9000;pointer-events:none;
+  width:20px;height:20px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  transition:left 0.6s cubic-bezier(0.25,0.46,0.45,0.94),
+             top 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+  display:none;
+}
+#cursor svg{width:20px;height:20px;}
+#cursor-click{
+  position:fixed;z-index:8999;pointer-events:none;
+  width:40px;height:40px;border-radius:50%;
+  border:2px solid rgba(18,59,122,0.6);
+  transform:translate(-50%,-50%) scale(0);
+  transition:transform 0.3s ease,opacity 0.3s ease;
+  opacity:0;
+}
+
+/* ── HIGHLIGHT OVERLAY ── */
+.demo-highlight{
+  position:fixed;z-index:8000;pointer-events:none;
+  border:3px solid #93c5fd;border-radius:8px;
+  box-shadow:0 0 0 4000px rgba(0,0,0,0.4);
+  transition:all 0.5s ease;opacity:0;
+}
+.demo-highlight.visible{opacity:1;}
+
+/* ── SCENE TRANSITION ── */
+#sceneTransition{
+  position:fixed;inset:0;z-index:9500;
+  background:#0a0e1a;opacity:0;pointer-events:none;
+  transition:opacity 0.3s ease;
+}
+#sceneTransition.active{opacity:1;pointer-events:all;}
+
+/* ── CONTROLS ── */
+#controls{
+  position:fixed;bottom:80px;right:20px;z-index:600;
+  display:none;flex-direction:column;gap:8px;
+}
+.ctrl-btn{
+  width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
+  font-family:'Sora',sans-serif;transition:all 0.2s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+.ctrl-btn.play-pause{background:var(--azul);color:#fff;}
+.ctrl-btn.restart{background:#374151;color:#fff;}
+.ctrl-btn:hover{transform:scale(1.1);}
+
+/* ── SCENE TITLE ── */
+#sceneTitle{
+  position:fixed;top:48px;left:50%;transform:translateX(-50%);z-index:600;
+  background:rgba(10,14,26,0.9);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.1);border-radius:30px;
+  padding:6px 20px;font-family:'Sora',sans-serif;font-size:12px;
+  color:#93c5fd;white-space:nowrap;
+  opacity:0;transition:opacity 0.3s ease;pointer-events:none;
+}
+#sceneTitle.visible{opacity:1;}
+
+/* ── END SCREEN ── */
+#endScreen{
+  position:fixed;inset:0;z-index:9800;
+  background:linear-gradient(135deg,#0a0e1a,#0d1b3e);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+}
+#endScreen h2{
+  font-family:'Sora',sans-serif;font-size:clamp(20px,4vw,36px);font-weight:700;
+  color:#fff;text-align:center;margin-bottom:12px;
+}
+#endScreen p{font-family:'Sora',sans-serif;font-size:15px;color:#93c5fd;text-align:center;margin-bottom:32px;}
+.end-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.end-btn{
+  padding:12px 28px;border-radius:30px;border:none;cursor:pointer;
+  font-family:'Sora',sans-serif;font-size:14px;font-weight:700;
+  transition:all 0.2s;
+}
+.end-btn.primary{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;}
+.end-btn.secondary{background:rgba(255,255,255,0.1);color:#e2e8f0;border:1px solid rgba(255,255,255,0.2);}
+.end-btn:hover{transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-badge"><span></span> Demo automática • Sem instalação necessária</div>
+  <h1>🏦 Sistema Financeiro<br>Distrital</h1>
+  <p>Demonstração completa em 10 cenas • Narração em Português</p>
+  <button id="startBtn" onclick="startDemo()">▶ Iniciar Demonstração</button>
+</div>
+
+<!-- CURSOR VIRTUAL -->
+<div id="cursor"><svg viewBox="0 0 20 20" fill="none"><path d="M4 2L4 16L8 12L12 20L14 19L10 11L16 11Z" fill="white" stroke="#123b7a" stroke-width="1.5"/></svg></div>
+<div id="cursor-click"></div>
+
+<!-- HIGHLIGHT -->
+<div class="demo-highlight" id="highlight"></div>
+
+<!-- SCENE TRANSITION -->
+<div id="sceneTransition"></div>
+
+<!-- SCENE TITLE -->
+<div id="sceneTitle"></div>
+
+<!-- DEMO FRAME -->
+<div id="demoFrame">
+  <div class="demo-topbar">
+    <div class="demo-topbar-left">
+      <div class="demo-dot red"></div>
+      <div class="demo-dot yellow"></div>
+      <div class="demo-dot green"></div>
+      <div class="demo-url">financeiro-distrital.vercel.app</div>
+    </div>
+    <div class="demo-topbar-right" id="demoTime"></div>
+  </div>
+
+  <div id="sistema">
+    <div class="s-wrap" id="sysContent"></div>
+  </div>
+</div>
+
+<!-- NARRATION -->
+<div id="narration">
+  <div class="narr-avatar">🤖</div>
+  <div class="narr-text" id="narrText">A preparar demonstração...</div>
+  <div class="narr-progress" id="narrProgress"></div>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls">
+  <button class="ctrl-btn restart" onclick="restartDemo()" title="Reiniciar">↺</button>
+  <button class="ctrl-btn play-pause" id="playPauseBtn" onclick="togglePause()" title="Pausar/Continuar">⏸</button>
+</div>
+
+<!-- END SCREEN -->
+<div id="endScreen">
+  <div style="font-size:48px;margin-bottom:20px;">🎉</div>
+  <h2>Demonstração Concluída</h2>
+  <p>O Sistema Financeiro Distrital está pronto a usar.<br>Contacte o administrador para obter as suas credenciais.</p>
+  <div class="end-btns">
+    <button class="end-btn primary" onclick="restartDemo()">↺ Ver novamente</button>
+    <button class="end-btn secondary" onclick="window.close()">✕ Fechar</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DEMO ENGINE
+// ═══════════════════════════════════════════════════════
+
+let demoRunning = false;
+let demoPaused  = false;
+let demoAbort   = false;
+let currentScene = 0;
+
+const TOTAL_SCENES = 10;
+
+// ── CENAS ──────────────────────────────────────────────
+const SCENES = [
+  {
+    title: '1. Ecrã de Login',
+    narration: 'O utilizador acede ao sistema pelo browser. O ecrã de login é simples e seguro. Cada pessoa tem as suas próprias credenciais.',
+    build: buildLogin,
+    duration: 6000,
+  },
+  {
+    title: '2. Dashboard Principal',
+    narration: 'Após o login, o Dashboard apresenta todos os indicadores financeiros em tempo real: receitas, despesas, saldo e lançamentos pendentes.',
+    build: buildDashboard,
+    duration: 7000,
+  },
+  {
+    title: '3. Lista de Lançamentos',
+    narration: 'No módulo de Lançamentos, o utilizador vê todos os movimentos financeiros com filtros por mês, ano e estado. Cada linha tem um badge colorido indicando o estado.',
+    build: buildLancamentosList,
+    duration: 7000,
+  },
+  {
+    title: '4. Criar Novo Lançamento',
+    narration: 'Ao clicar em Novo Lançamento, abre um formulário completo. O utilizador selecciona o tipo, preenche os dados e selecciona a rubrica — que carrega automaticamente conforme o grupo escolhido.',
+    build: buildNovoLancamento,
+    duration: 9000,
+  },
+  {
+    title: '5. Comprovativo em PDF',
+    narration: 'Antes de submeter, o utilizador pode anexar o comprovativo. O ficheiro fica guardado no Google Drive do distrito, ligado ao lançamento.',
+    build: buildComprovativo,
+    duration: 6000,
+  },
+  {
+    title: '6. Submissão para Aprovação',
+    narration: 'Ao submeter, o lançamento passa para a fila do Tesoureiro Distrital. O utilizador recebe confirmação imediata.',
+    build: buildSubmissao,
+    duration: 5000,
+  },
+  {
+    title: '7. Módulo de Aprovações',
+    narration: 'O Tesoureiro Distrital vê os lançamentos pendentes. Pode aprovar ou rejeitar cada um. Em caso de rejeição, é obrigatório indicar o motivo.',
+    build: buildAprovacoes,
+    duration: 8000,
+  },
+  {
+    title: '8. Relatórios Financeiros',
+    narration: 'Os Relatórios mostram apenas lançamentos aprovados. O relatório por Departamento e por Rubrica permitem analisar a execução financeira em detalhe.',
+    build: buildRelatorios,
+    duration: 7000,
+  },
+  {
+    title: '9. Administração do Sistema',
+    narration: 'O Administrador Geral gere utilizadores, departamentos e igrejas. Cada utilizador tem um perfil com permissões específicas.',
+    build: buildAdministracao,
+    duration: 7000,
+  },
+  {
+    title: '10. Perfis e Fluxo de Aprovação',
+    narration: 'O fluxo de aprovação tem dois níveis. Nível 1 é o Tesoureiro Distrital. Nível 2 é o Administrador Geral. Só após ambos aprovarem o lançamento fica disponível nos relatórios.',
+    build: buildFluxoAprovacao,
+    duration: 7000,
+  },
+];
+
+// ── UTILITÁRIOS ─────────────────────────────────────────
+
+function sleep(ms) {
+  return new Promise(resolve => {
+    let timer = setInterval(() => {
+      if (demoAbort) { clearInterval(timer); resolve(); return; }
+      if (!demoPaused) { clearInterval(timer); resolve(); }
+    }, 50);
+    setTimeout(() => { clearInterval(timer); resolve(); }, ms + 100);
+  });
+}
+
+function waitMs(ms) {
+  return new Promise(resolve => {
+    const start = Date.now();
+    const tick = () => {
+      if (demoAbort) { resolve(); return; }
+      if (demoPaused) { requestAnimationFrame(tick); return; }
+      if (Date.now() - start >= ms) { resolve(); return; }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+}
+
+function getSys() { return document.getElementById('sysContent'); }
+
+function showScene(title) {
+  const el = document.getElementById('sceneTitle');
+  el.textContent = title;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 3000);
+}
+
+// Audio player para MP3
+let currentAudio = null;
+
+async function narrate(text) {
+  const el = document.getElementById('narrText');
+  el.innerHTML = text;
+  document.getElementById('narration').classList.add('visible');
+  // Cancelar qualquer voz do browser que possa estar activa
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function playSceneAudio(sceneIndex) {
+  // Parar áudio anterior
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  const audioFile = 'audio/cena' + (sceneIndex + 1) + '.mp3';
+  currentAudio = new Audio(audioFile);
+  currentAudio.volume = 1.0;
+
+  // Retorna promise que resolve quando o áudio termina
+  return new Promise((resolve) => {
+    currentAudio.onended = () => resolve();
+
+    // Se o MP3 falhar a carregar
+    currentAudio.onerror = () => resolve();
+
+    // Tenta reproduzir — o utilizador já clicou em "Iniciar" então autoplay é permitido
+    currentAudio.play().then(() => {
+      // A tocar — aguarda onended
+    }).catch((err) => {
+      console.warn('Audio play failed:', err);
+      resolve(); // avança sem áudio se falhar
+    });
+  });
+}
+
+function stopAudio() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+}
+
+function pauseAudio() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (currentAudio && !currentAudio.paused) currentAudio.pause();
+}
+
+function resumeAudio() {
+  if (currentAudio && currentAudio.paused) currentAudio.play();
+}
+
+// Cursor virtual
+const cur = document.getElementById('cursor');
+const curClick = document.getElementById('cursor-click');
+
+function showCursor() { cur.style.display = 'block'; }
+
+async function moveCursor(x, y) {
+  cur.style.left = x + 'px';
+  cur.style.top  = y + 'px';
+  await waitMs(700);
+}
+
+async function clickCursor(x, y) {
+  curClick.style.left = x + 'px';
+  curClick.style.top  = y + 'px';
+  curClick.style.transform = 'translate(-50%,-50%) scale(1)';
+  curClick.style.opacity = '1';
+  await waitMs(200);
+  curClick.style.transform = 'translate(-50%,-50%) scale(2)';
+  curClick.style.opacity = '0';
+  await waitMs(400);
+}
+
+async function typeIn(selector, text, speed=60) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.value = '';
+  el.classList.add('typing');
+  for (const ch of text) {
+    if (demoAbort) break;
+    el.value += ch;
+    await waitMs(speed);
+  }
+  el.classList.remove('typing');
+}
+
+function transition() {
+  const el = document.getElementById('sceneTransition');
+  el.classList.add('active');
+  return new Promise(r => setTimeout(() => { el.classList.remove('active'); r(); }, 400));
+}
+
+function updateProgress() {
+  const p = document.getElementById('narrProgress');
+  p.innerHTML = SCENES.map((s,i) =>
+    `<div class="narr-dot ${i < currentScene ? 'done' : i === currentScene ? 'active' : ''}"></div>`
+  ).join('');
+}
+
+function updateClock() {
+  const el = document.getElementById('demoTime');
+  if (el) { const d = new Date(); el.textContent = d.toLocaleTimeString('pt-PT'); }
+}
+setInterval(updateClock, 1000);
+
+// ── SCENES BUILD ────────────────────────────────────────
+
+function buildLogin() {
+  getSys().innerHTML = `
+    <div style="max-width:400px;margin:60px auto;background:#fff;padding:32px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+      <h1 style="font-size:24px;color:#123b7a;text-align:center;margin-bottom:6px;">🏦 Sistema Financeiro</h1>
+      <p style="text-align:center;color:#6c757d;font-size:13px;margin-bottom:24px;">Insira as suas credenciais para aceder ao sistema.</p>
+      <label class="s-label">👤 Username</label>
+      <input id="d_user" class="s-input" placeholder="Digite o seu username">
+      <label class="s-label">🔒 Palavra-passe</label>
+      <input id="d_pass" class="s-input" type="password" placeholder="••••••••">
+      <button class="s-btn success" style="width:100%;margin-top:20px;padding:14px;font-size:15px;" id="d_login">Iniciar Sessão</button>
+      <div id="d_msg" style="margin-top:12px;font-size:13px;text-align:center;color:#28a745;"></div>
+    </div>`;
+}
+
+function buildDashboard(perfil='ADMIN_GERAL', nome='Administrador Geral', igreja='-', saldo='237 553,00 MZN') {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-topbar">
+        <div><h1>📊 Dashboard Financeiro</h1><p style="font-size:12px;color:#6c757d;">👋 Sessão iniciada por ${nome}.</p></div>
+        <div class="s-topbar-btns">
+          <button class="s-btn info" style="font-size:12px;padding:8px 14px;">🔄 Actualizar</button>
+          <button class="s-btn danger" style="font-size:12px;padding:8px 14px;">🚪 Terminar sessão</button>
+        </div>
+      </div>
+      <div class="s-kpis">
+        <div class="s-kpi"><div class="s-kpi-title">👤 Utilizador</div><div class="s-kpi-val">${nome}</div></div>
+        <div class="s-kpi"><div class="s-kpi-title">🎯 Perfil</div><div class="s-kpi-val" style="font-size:13px;">${perfil}</div></div>
+        <div class="s-kpi"><div class="s-kpi-title">⛪ Igreja</div><div class="s-kpi-val">${igreja}</div></div>
+        <div class="s-kpi"><div class="s-kpi-title">💰 Saldo Actual</div><div class="s-kpi-val" style="color:#28a745;">${saldo}</div></div>
+      </div>
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item active">📊 Dashboard</div>
+          <div class="s-menu-item">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div class="s-kpis-row">
+            <div class="s-kpi-sm"><div class="val" style="color:#28a745;">238 330,00 MZN</div><div class="lbl">📈 Receitas Aprovadas</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#dc3545;">777,00 MZN</div><div class="lbl">📉 Despesas Aprovadas</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#28a745;">237 553,00 MZN</div><div class="lbl">💰 Saldo Aprovado</div></div>
+          </div>
+          <div class="s-kpis-row">
+            <div class="s-kpi-sm"><div class="val" style="color:#856404;">17</div><div class="lbl">⏳ Submetidos</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#0c5460;">9</div><div class="lbl">📝 Rascunhos</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#dc3545;">2</div><div class="lbl">❌ Rejeitados</div></div>
+          </div>
+          <table class="s-table">
+            <thead><tr><th>Departamento</th><th>Entradas</th><th>Saídas</th><th>Saldo</th></tr></thead>
+            <tbody>
+              <tr><td><strong>MNI</strong></td><td style="color:#28a745;">554,00 MZN</td><td style="color:#dc3545;">0,00 MZN</td><td style="color:#28a745;font-weight:700;">554,00 MZN</td></tr>
+              <tr><td><strong>Senhoras</strong></td><td style="color:#28a745;">0,00 MZN</td><td style="color:#dc3545;">777,00 MZN</td><td style="color:#dc3545;font-weight:700;">-777,00 MZN</td></tr>
+              <tr><td><strong>Homens</strong></td><td style="color:#28a745;">8 888,00 MZN</td><td style="color:#dc3545;">0,00 MZN</td><td style="color:#28a745;font-weight:700;">8 888,00 MZN</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildLancamentosList() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-topbar">
+        <div><h1>📝 Gestão de Lançamentos</h1></div>
+      </div>
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item active">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <strong>📋 Lista de Lançamentos</strong>
+            <button class="s-btn success" id="d_novo" style="font-size:12px;padding:8px 14px;">＋ Novo Lançamento</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <select class="s-input" style="flex:1;min-width:100px;padding:8px;"><option>Abril</option></select>
+            <select class="s-input" style="flex:1;min-width:70px;padding:8px;"><option>2026</option></select>
+            <select class="s-input" style="flex:1;min-width:120px;padding:8px;"><option>Todos os estados</option></select>
+            <button class="s-btn info" style="padding:8px 14px;font-size:12px;">🔍 Filtrar</button>
+          </div>
+          <table class="s-table">
+            <thead><tr><th>Data</th><th>Nº Doc.</th><th>Descrição</th><th>Grupo</th><th>Valor</th><th>Tipo</th><th>Estado</th><th>Acções</th></tr></thead>
+            <tbody>
+              <tr><td>2026-04-11</td><td style="font-size:10px;color:#6c757d;">DES-2026-12SE9A</td><td>Compra material escritório</td><td>Funcionamento</td><td style="font-weight:700;">32,00 MZN</td><td>📉 Despesa</td><td><span class="badge warning">📤 Submetido</span></td><td><button class="s-btn info" style="font-size:10px;padding:4px 8px;">📎 Ver</button></td></tr>
+              <tr><td>2026-04-10</td><td style="font-size:10px;color:#6c757d;">DES-2026-5F97DB</td><td>Salários e Subsídios</td><td>Salários</td><td style="font-weight:700;">887,00 MZN</td><td>📉 Despesa</td><td><span class="badge info">📝 Rascunho</span></td><td><button class="s-btn success" style="font-size:10px;padding:4px 8px;">📤 Submeter</button></td></tr>
+              <tr><td>2026-04-08</td><td style="font-size:10px;color:#6c757d;">REC-2026-AB12CD</td><td>Oferta dominical</td><td>Receitas</td><td style="font-weight:700;color:#28a745;">45 200,00 MZN</td><td>📈 Receita</td><td><span class="badge success">✅ Aprovado</span></td><td><button class="s-btn info" style="font-size:10px;padding:4px 8px;">📎 Ver</button></td></tr>
+              <tr><td>2026-02-26</td><td style="font-size:10px;color:#6c757d;">DES-2026-CE9C14</td><td>Departamento Jovens</td><td>Departamentos</td><td style="font-weight:700;">44,00 MZN</td><td>📉 Despesa</td><td><span class="badge danger">❌ Rejeitado</span></td><td><button class="s-btn info" style="font-size:10px;padding:4px 8px;">📎 Anexar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildNovoLancamento() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item active">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <button class="s-btn secondary" style="font-size:12px;padding:7px 14px;">← Voltar</button>
+            <strong>＋ Novo Lançamento</strong>
+          </div>
+          <div class="s-form-grid">
+            <div>
+              <label class="s-label">Tipo de Movimento *</label>
+              <select id="d_tipo" class="s-input"><option>📉 Despesa</option><option>📈 Receita</option></select>
+              <label class="s-label">Data *</label>
+              <input id="d_data" class="s-input" value="2026-04-14">
+              <label class="s-label">Valor (MZN) *</label>
+              <input id="d_valor" class="s-input" placeholder="0.00">
+              <label class="s-label">Igreja</label>
+              <select class="s-input"><option>Matola A</option><option>Tchumene</option></select>
+              <label class="s-label">Departamento *</label>
+              <select class="s-input"><option>Administração</option><option>Senhoras</option></select>
+            </div>
+            <div>
+              <label class="s-label">Grupo *</label>
+              <select id="d_grupo" class="s-input"><option value="">Seleccione grupo</option><option>Funcionamento da Sede</option><option>Salários e Subsídios</option></select>
+              <label class="s-label">Rubrica *</label>
+              <select id="d_rubrica" class="s-input"><option>Seleccione o grupo primeiro</option></select>
+              <label class="s-label">Conta *</label>
+              <select class="s-input"><option>Conta Corrente Distrital</option></select>
+              <label class="s-label">Descrição *</label>
+              <textarea id="d_desc" class="s-input" rows="3" placeholder="Descreva o movimento..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildComprovativo() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item active">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <button class="s-btn secondary" style="font-size:12px;padding:7px 14px;">← Voltar</button>
+            <strong>＋ Novo Lançamento</strong>
+          </div>
+          <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:12px;padding:16px;margin-bottom:16px;">
+            <label class="s-label" style="margin-top:0;">📎 Comprovativo <span style="color:#6c757d;font-size:11px;font-weight:400;">(opcional — PDF, imagem, Word, Excel — máx. 10MB)</span></label>
+            <div id="d_dropzone" style="border:2px dashed #dee2e6;border-radius:10px;padding:20px;text-align:center;background:#fff;cursor:pointer;transition:all 0.3s;">
+              <div style="font-size:24px;margin-bottom:8px;">📁</div>
+              <div style="font-size:13px;color:#6c757d;">Clique para seleccionar ficheiro ou arraste aqui</div>
+            </div>
+            <div id="d_filepreview" style="margin-top:10px;font-size:12px;color:#155724;display:none;">
+              ✅ <strong>comprovativo_abril2026.pdf</strong> (245 KB) — pronto para carregar
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="s-btn secondary" style="font-size:13px;">✖ Cancelar</button>
+            <button class="s-btn info" style="font-size:13px;">💾 Guardar Rascunho</button>
+            <button class="s-btn success" id="d_submeter" style="font-size:13px;">📤 Submeter para Aprovação</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildSubmissao() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item active">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="background:#d4edda;border:1px solid #c3e6cb;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">
+            <div style="font-size:32px;margin-bottom:8px;">✅</div>
+            <div style="font-size:15px;font-weight:700;color:#155724;margin-bottom:4px;">Lançamento submetido para aprovação!</div>
+            <div style="font-size:13px;color:#155724;">Comprovativo anexado. O Tesoureiro Distrital irá rever brevemente.</div>
+          </div>
+          <table class="s-table">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>2026-04-14</td><td>Material de escritório — comprovativo anexado</td><td style="font-weight:700;">125,00 MZN</td><td><span class="badge warning">📤 Submetido</span></td></tr>
+              <tr><td>2026-04-11</td><td>Compra material escritório</td><td style="font-weight:700;">32,00 MZN</td><td><span class="badge warning">📤 Submetido</span></td></tr>
+              <tr><td>2026-04-08</td><td>Oferta dominical</td><td style="font-weight:700;color:#28a745;">45 200,00 MZN</td><td><span class="badge success">✅ Aprovado</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildAprovacoes() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-topbar">
+        <div><h1>✓ Aprovações Pendentes</h1></div>
+      </div>
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item">📝 Lançamentos</div>
+          <div class="s-menu-item active">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <strong style="display:block;margin-bottom:12px;">⏳ Lançamentos a Aprovar</strong>
+          <table class="s-table">
+            <thead><tr><th>Data</th><th>Descrição</th><th>Rubrica</th><th>Valor</th><th>Tipo</th><th>Nível</th><th>Acções</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>2026-04-14</td><td>Material de escritório</td><td>Oferta – Gratidão</td>
+                <td style="font-weight:700;">125,00 MZN</td><td>📉 Despesa</td>
+                <td><span class="badge info">Nível 1</span></td>
+                <td>
+                  <button class="s-btn success" id="d_aprovar" style="font-size:10px;padding:5px 8px;">✅ Aprovar</button>
+                  <button class="s-btn danger" style="font-size:10px;padding:5px 8px;">❌ Rejeitar</button>
+                </td>
+              </tr>
+              <tr>
+                <td>2026-04-11</td><td>Compra material escritório</td><td>Funcionamento da Sede</td>
+                <td style="font-weight:700;">32,00 MZN</td><td>📉 Despesa</td>
+                <td><span class="badge info">Nível 1</span></td>
+                <td>
+                  <button class="s-btn success" style="font-size:10px;padding:5px 8px;">✅ Aprovar</button>
+                  <button class="s-btn danger" style="font-size:10px;padding:5px 8px;">❌ Rejeitar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildRelatorios() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-topbar"><div><h1>📄 Relatórios Financeiros</h1></div></div>
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item active">📄 Relatórios</div>
+          <div class="s-menu-item">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;">
+              <strong style="font-size:13px;">🏢 Por Departamento</strong>
+              <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">
+                <select class="s-input" style="flex:1;padding:6px;font-size:11px;"><option>Abril</option></select>
+                <select class="s-input" style="flex:1;padding:6px;font-size:11px;"><option>2026</option></select>
+              </div>
+              <button class="s-btn info" style="font-size:11px;padding:7px 14px;">📥 Gerar</button>
+            </div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;">
+              <strong style="font-size:13px;">📂 Por Rubrica</strong>
+              <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">
+                <select class="s-input" style="flex:1;padding:6px;font-size:11px;"><option>Abril</option></select>
+                <select class="s-input" style="flex:1;padding:6px;font-size:11px;"><option>2026</option></select>
+              </div>
+              <button class="s-btn info" style="font-size:11px;padding:7px 14px;">📥 Gerar</button>
+            </div>
+          </div>
+          <div style="font-weight:600;margin-bottom:8px;font-size:13px;">📅 Abril 2026</div>
+          <div class="s-kpis-row">
+            <div class="s-kpi-sm"><div class="val" style="color:#28a745;">238 330,00 MZN</div><div class="lbl">Entradas</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#dc3545;">777,00 MZN</div><div class="lbl">Saídas</div></div>
+            <div class="s-kpi-sm"><div class="val" style="color:#28a745;">237 553,00 MZN</div><div class="lbl">Saldo</div></div>
+          </div>
+          <table class="s-table">
+            <thead><tr><th>Departamento</th><th>Entradas</th><th>Saídas</th><th>Saldo</th></tr></thead>
+            <tbody>
+              <tr><td><strong>MNI</strong></td><td style="color:#28a745;">554,00 MZN</td><td style="color:#dc3545;">0,00 MZN</td><td style="color:#28a745;font-weight:700;">554,00 MZN</td></tr>
+              <tr><td><strong>Senhoras</strong></td><td style="color:#28a745;">0,00 MZN</td><td style="color:#dc3545;">777,00 MZN</td><td style="color:#dc3545;font-weight:700;">-777,00 MZN</td></tr>
+              <tr><td><strong>Homens</strong></td><td style="color:#28a745;">8 888,00 MZN</td><td style="color:#dc3545;">0,00 MZN</td><td style="color:#28a745;font-weight:700;">8 888,00 MZN</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildAdministracao() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-topbar"><div><h1>⚙️ Administração do Sistema</h1></div></div>
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item active">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div style="background:#f8f9fa;border:2px solid #123b7a;border-radius:10px;padding:14px;cursor:pointer;">
+              <h3 style="font-size:14px;">👥 Utilizadores</h3><p style="font-size:12px;color:#6c757d;">Gerir contas e permissões.</p></div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;cursor:pointer;">
+              <h3 style="font-size:14px;">🎯 Perfis & Aprovações</h3><p style="font-size:12px;color:#6c757d;">Visualizar perfis e fluxo.</p></div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;cursor:pointer;">
+              <h3 style="font-size:14px;">🏢 Departamentos</h3><p style="font-size:12px;color:#6c757d;">Gerir departamentos.</p></div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;cursor:pointer;">
+              <h3 style="font-size:14px;">⛪ Igrejas</h3><p style="font-size:12px;color:#6c757d;">Gerir igrejas e entidades.</p></div>
+          </div>
+          <table class="s-table">
+            <thead><tr><th>Nome</th><th>Username</th><th>Perfil</th><th>Igreja</th><th>Estado</th><th>Acções</th></tr></thead>
+            <tbody>
+              <tr><td>Administrador Geral</td><td style="font-family:monospace;font-size:11px;">admin</td><td><span class="badge info">ADMIN_GERAL</span></td><td>-</td><td><span class="badge success">✅ Activo</span></td><td><button class="s-btn danger" style="font-size:10px;padding:4px 8px;">🚫 Desactivar</button></td></tr>
+              <tr><td>Luis Sitoe</td><td style="font-family:monospace;font-size:11px;">luis</td><td><span class="badge info" style="font-size:9px;">TESOUREIRO_DISTRITAL</span></td><td>Matola A</td><td><span class="badge success">✅ Activo</span></td><td><button class="s-btn danger" style="font-size:10px;padding:4px 8px;">🚫 Desactivar</button></td></tr>
+              <tr><td>Mario</td><td style="font-family:monospace;font-size:11px;">mario</td><td><span class="badge info" style="font-size:9px;">TESOUREIRO_LOCAL</span></td><td>Tchumene</td><td><span class="badge success">✅ Activo</span></td><td><button class="s-btn danger" style="font-size:10px;padding:4px 8px;">🚫 Desactivar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildFluxoAprovacao() {
+  getSys().innerHTML = `
+    <div class="s-wrap" style="padding:0;">
+      <div class="s-layout">
+        <div class="s-sidebar">
+          <h2>📋 Menu Principal</h2>
+          <div class="s-menu-item">📊 Dashboard</div>
+          <div class="s-menu-item">📝 Lançamentos</div>
+          <div class="s-menu-item">✓ Aprovações</div>
+          <div class="s-menu-item">📈 Orçamentos</div>
+          <div class="s-menu-item">📄 Relatórios</div>
+          <div class="s-menu-item active">⚙️ Administração</div>
+        </div>
+        <div class="s-content">
+          <strong style="font-size:14px;display:block;margin-bottom:14px;">🔄 Fluxo de Aprovação de Lançamentos</strong>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">📝</div>
+              <div style="font-weight:700;font-size:12px;margin-bottom:4px;">1. Criação</div>
+              <div style="font-size:11px;color:#6c757d;">Tesoureiro cria o lançamento como Rascunho</div>
+            </div>
+            <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">📤</div>
+              <div style="font-weight:700;font-size:12px;margin-bottom:4px;">2. Submissão</div>
+              <div style="font-size:11px;color:#6c757d;">Passa a Submetido e vai para fila</div>
+            </div>
+            <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">💼</div>
+              <div style="font-weight:700;font-size:12px;color:#856404;margin-bottom:4px;">3. Nível 1</div>
+              <div style="font-size:11px;color:#856404;"><strong>Tesoureiro Distrital</strong> aprova ou rejeita</div>
+            </div>
+            <div style="background:#d4edda;border:1px solid #28a745;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🔑</div>
+              <div style="font-weight:700;font-size:12px;color:#155724;margin-bottom:4px;">4. Nível 2</div>
+              <div style="font-size:11px;color:#155724;"><strong>Admin Geral</strong> aprovação final</div>
+            </div>
+          </div>
+          <strong style="font-size:13px;display:block;margin-bottom:10px;">👥 Perfis por Papel</strong>
+          <table class="s-table">
+            <thead><tr><th>Perfil</th><th>Âmbito</th><th>Pode Submeter</th><th>Papel na Aprovação</th></tr></thead>
+            <tbody>
+              <tr><td><strong>🔑 Admin Geral</strong></td><td><span class="badge info">Distrital</span></td><td><span class="badge danger">❌ Não</span></td><td><span class="badge success">Nível 2</span></td></tr>
+              <tr><td><strong>💼 Tesoureiro Distrital</strong></td><td><span class="badge info">Distrital</span></td><td><span class="badge success">✅ Sim</span></td><td><span class="badge success">Nível 1</span></td></tr>
+              <tr><td><strong>🏠 Tesoureiro Local</strong></td><td><span class="badge" style="background:#e0cffc;color:#5a3e99;">Local</span></td><td><span class="badge success">✅ Sim</span></td><td>—</td></tr>
+              <tr><td><strong>🏢 Resp. Departamental</strong></td><td><span class="badge" style="background:#e0cffc;color:#5a3e99;">Departamento</span></td><td><span class="badge success">✅ Sim</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SCENE ANIMATIONS ────────────────────────────────────
+
+async function animateScene(index) {
+  const scene = SCENES[index];
+  showCursor();
+  showScene(scene.title);
+  narrate(scene.narration);
+  updateProgress();
+
+  switch(index) {
+    case 0: await animLogin(); break;
+    case 1: await animDashboard(); break;
+    case 2: await animLancamentos(); break;
+    case 3: await animNovoLanc(); break;
+    case 4: await animComprovativo(); break;
+    case 5: await animSubmissao(); break;
+    case 6: await animAprovacoes(); break;
+    case 7: await animRelatorios(); break;
+    case 8: await animAdmin(); break;
+    case 9: await animFluxo(); break;
+  }
+}
+
+function getPos(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return {x: window.innerWidth/2, y: window.innerHeight/2};
+  const r = el.getBoundingClientRect();
+  return {x: r.left + r.width/2, y: r.top + r.height/2};
+}
+
+async function animLogin() {
+  await waitMs(1000);
+  let p = getPos('#d_user');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  await typeIn('#d_user', 'admin', 80);
+  await waitMs(600);
+  p = getPos('#d_pass');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  await typeIn('#d_pass', '••••••••', 100);
+  await waitMs(600);
+  p = getPos('#d_login') || getPos('.s-btn.success');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  const msg = document.getElementById('d_msg');
+  if (msg) { msg.textContent = '⏳ A autenticar...'; }
+  await waitMs(1200);
+  if (msg) { msg.textContent = '✅ Login efectuado!'; }
+  await waitMs(1500);
+}
+
+async function animDashboard() {
+  await waitMs(1000);
+  // Highlight KPIs
+  const kpis = document.querySelectorAll('.s-kpi');
+  for (const kpi of kpis) {
+    kpi.style.border = '2px solid #123b7a';
+    await waitMs(400);
+    kpi.style.border = '1px solid var(--borda)';
+  }
+  await waitMs(1000);
+  // Point at saldo
+  const p = getPos('.s-kpi:last-child');
+  await moveCursor(p.x, p.y);
+  await waitMs(2000);
+}
+
+async function animLancamentos() {
+  await waitMs(800);
+  // Highlight badges
+  const badges = document.querySelectorAll('.badge');
+  for (const b of badges) {
+    const orig = b.style.transform;
+    b.style.transform = 'scale(1.2)';
+    await waitMs(300);
+    b.style.transform = orig;
+  }
+  await waitMs(800);
+  const p = getPos('#d_novo');
+  if (p) { await moveCursor(p.x, p.y); }
+  await waitMs(2000);
+}
+
+async function animNovoLanc() {
+  await waitMs(600);
+  let p = getPos('#d_tipo');
+  await moveCursor(p.x, p.y);
+  await waitMs(800);
+
+  p = getPos('#d_valor');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  await typeIn('#d_valor', '125.00', 80);
+  await waitMs(600);
+
+  p = getPos('#d_grupo');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  const sel = document.getElementById('d_grupo');
+  if (sel) sel.value = 'Funcionamento da Sede';
+  await waitMs(500);
+
+  // Show rubrica auto-update
+  const rub = document.getElementById('d_rubrica');
+  if (rub) {
+    rub.innerHTML = '<option>Oferta – Gratidão</option><option>Dízimos</option><option>Contribuições</option>';
+    rub.style.borderColor = '#28a745';
+  }
+  await waitMs(800);
+  if (rub) rub.style.borderColor = '';
+
+  p = getPos('#d_desc');
+  await moveCursor(p.x, p.y);
+  await clickCursor(p.x, p.y);
+  await typeIn('#d_desc', 'Material de escritório para secretaria', 60);
+  await waitMs(1000);
+}
+
+async function animComprovativo() {
+  await waitMs(800);
+  const zone = document.getElementById('d_dropzone');
+  if (zone) {
+    zone.style.borderColor = '#123b7a';
+    zone.style.background = '#e8f0fe';
+    await waitMs(1200);
+    zone.style.borderColor = '#28a745';
+    zone.style.background = '#d4edda';
+    zone.innerHTML = '<div style="font-size:24px;margin-bottom:8px;">📄</div><div style="font-size:13px;color:#155724;">comprovativo_abril2026.pdf seleccionado</div>';
+  }
+  const prev = document.getElementById('d_filepreview');
+  if (prev) { prev.style.display = 'block'; }
+  await waitMs(1500);
+
+  const p = getPos('#d_submeter');
+  if (p) { await moveCursor(p.x, p.y); }
+  await waitMs(1500);
+}
+
+async function animSubmissao() {
+  await waitMs(800);
+  const rows = document.querySelectorAll('.s-table tr');
+  if (rows[1]) {
+    rows[1].style.background = '#d4edda';
+    await waitMs(1000);
+    rows[1].style.background = '';
+  }
+  await waitMs(2000);
+}
+
+async function animAprovacoes() {
+  await waitMs(800);
+  const p = getPos('#d_aprovar');
+  if (p) {
+    await moveCursor(p.x, p.y);
+    await clickCursor(p.x, p.y);
+    await waitMs(600);
+
+    // Show modal
+    const over = document.createElement('div');
+    over.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:5000;display:flex;align-items:center;justify-content:center;';
+    over.innerHTML = `<div style="background:#fff;border-radius:16px;padding:24px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:'Sora',sans-serif;">
+      <p style="font-size:14px;color:#2c3e50;margin:0 0 20px;line-height:1.5;">Confirmar aprovação deste lançamento?</p>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button id="_no" style="padding:9px 20px;border-radius:8px;border:2px solid #dee2e6;background:#fff;font-weight:600;cursor:pointer;font-size:13px;font-family:'Sora',sans-serif;">Cancelar</button>
+        <button id="_yes" style="padding:9px 20px;border-radius:8px;border:0;background:linear-gradient(135deg,#123b7a,#1e4d8f);color:#fff;font-weight:700;cursor:pointer;font-size:13px;font-family:'Sora',sans-serif;">✅ Confirmar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(over);
+    await waitMs(1000);
+    const yp = getPos('#_yes');
+    if (yp) await moveCursor(yp.x, yp.y);
+    await clickCursor(yp.x, yp.y);
+    over.remove();
+    await waitMs(800);
+    // Update table row
+    const badge = document.querySelector('.badge.warning');
+    if (badge) { badge.className = 'badge success'; badge.textContent = '✅ Aprovado'; }
+  }
+  await waitMs(2000);
+}
+
+async function animRelatorios() {
+  await waitMs(800);
+  // Highlight kpi values
+  const vals = document.querySelectorAll('.s-kpi-sm .val');
+  for (const v of vals) {
+    v.style.transform = 'scale(1.1)';
+    await waitMs(400);
+    v.style.transform = 'scale(1)';
+  }
+  await waitMs(1500);
+  // Highlight table
+  const rows = document.querySelectorAll('.s-table tbody tr');
+  for (const r of rows) {
+    r.style.background = '#e8f0fe';
+    await waitMs(400);
+    r.style.background = '';
+  }
+  await waitMs(1500);
+}
+
+async function animAdmin() {
+  await waitMs(800);
+  // Highlight cards
+  const cards = document.querySelectorAll('.s-content > div > div');
+  for (const c of cards) {
+    const orig = c.style.border;
+    c.style.border = '2px solid #123b7a';
+    await waitMs(500);
+    c.style.border = orig;
+  }
+  await waitMs(1500);
+}
+
+async function animFluxo() {
+  await waitMs(600);
+  // Highlight fluxo steps sequentially
+  const steps = document.querySelectorAll('.s-content > div > div > div');
+  for (const s of steps) {
+    const orig = s.style.border;
+    s.style.transform = 'scale(1.05)';
+    s.style.boxShadow = '0 4px 20px rgba(18,59,122,0.2)';
+    await waitMs(700);
+    s.style.transform = '';
+    s.style.boxShadow = '';
+  }
+  await waitMs(2000);
+}
+
+// ── MAIN LOOP ────────────────────────────────────────────
+
+async function waitForAudio() {
+  return new Promise(resolve => {
+    const check = () => {
+      if (demoAbort) { resolve(); return; }
+      if (demoPaused) { requestAnimationFrame(check); return; }
+      if (!currentAudio || currentAudio.ended || currentAudio.paused) {
+        resolve(); return;
+      }
+      requestAnimationFrame(check);
+    };
+    // Aguarda 300ms antes de começar a verificar
+    setTimeout(() => check(), 300);
+  });
+}
+
+async function runDemo() {
+  demoRunning = true; demoAbort = false;
+
+  for (let i = 0; i < SCENES.length; i++) {
+    if (demoAbort) break;
+    currentScene = i;
+
+    await transition();
+    SCENES[i].build();
+    await waitMs(300);
+
+    // Lança a animação e o áudio em paralelo
+    const audioPromise = playSceneAudio(i);
+    await animateScene(i);
+
+    // Espera o áudio terminar completamente antes de avançar
+    await audioPromise;
+    await waitMs(800); // pausa breve entre cenas
+  }
+
+  if (!demoAbort) showEndScreen();
+}
+
+function showEndScreen() {
+  document.getElementById('narration').classList.remove('visible');
+  document.getElementById('cursor').style.display = 'none';
+  document.getElementById('controls').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'flex';
+  stopAudio();
+}
+
+function startDemo() {
+  document.getElementById('intro').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('intro').style.display = 'none';
+    document.getElementById('demoFrame').style.display = 'flex';
+    document.getElementById('controls').style.display = 'flex';
+    document.getElementById('narration').classList.add('visible');
+    updateProgress();
+    runDemo();
+  }, 800);
+}
+
+function togglePause() {
+  demoPaused = !demoPaused;
+  const btn = document.getElementById('playPauseBtn');
+  btn.innerHTML = demoPaused ? '▶' : '⏸';
+  if (demoPaused) pauseAudio();
+  else resumeAudio();
+}
+
+function restartDemo() {
+  demoAbort = true;
+  stopAudio();
+  demoPaused = false;
+  setTimeout(() => {
+    document.getElementById('endScreen').style.display = 'none';
+    document.getElementById('demoFrame').style.display = 'flex';
+    document.getElementById('controls').style.display = 'flex';
+    document.getElementById('narration').classList.add('visible');
+    document.getElementById('playPauseBtn').innerHTML = '⏸';
+    demoAbort = false;
+    currentScene = 0;
+    updateProgress();
+    runDemo();
+  }, 300);
+}
+
+// Init
+updateProgress();
+updateClock();
+</script>
+</body>
+</html>
