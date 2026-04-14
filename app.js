@@ -211,8 +211,6 @@ function renderApp(user,menu){
   // pré-carregar opções em background
   getOpts(function(){});
   openDashboard();
-  // Mostrar boas-vindas com áudio após login (apenas uma vez)
-  setTimeout(showWelcomeAudio, 2000);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -237,8 +235,6 @@ async function login(){
   }catch(err){ setLoading(false); showMessage('❌ Erro: '+(err.message||'Tente novamente.'),false); document.getElementById('password').value=''; }
 }
 async function logout(){
-  // Parar áudio se estiver a tocar
-  if(window.speechSynthesis) window.speechSynthesis.cancel();
   try{
     await apiCall('Auth_logout',[getToken()]); sessionStorage.clear(); invalidarCache();
     document.getElementById('appView').classList.add('hidden');
@@ -327,8 +323,7 @@ function tabelaDeptos(linhas,res){
       <td style="text-align:right;color:#28a745;">${formatMoney(res.totalEntrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(res.totalSaida)}</td>
       <td style="text-align:right;color:${Number(res.totalSaldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(res.totalSaldo)}</td>
-    </tr></tfoot>
-  </table></div>`;
+    </tr></tfoot></table></div>`;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -399,8 +394,7 @@ function carregarLancamentos(){
           <button class="success" style="font-size:12px;padding:6px 10px;min-height:32px;" onclick="submeterLancamento('${l.id_lancamento}')">📤 Submeter</button>`:''}
           <button class="info" style="font-size:12px;padding:6px 10px;min-height:32px;" onclick="abrirAnexos('${l.id_lancamento}','${safeText(l.descricao).replace(/'/g,"\\'")}',${l.tem_anexo?'true':'false'})">${l.tem_anexo?'📎 Ver':'📎 Anexar'}</button>
         </td>
-      </tr>`).join('')}</tbody>
-    </table></div>`;
+      </tr>`).join('')}</tbody></table></div>`;
   },function(err){ wrap.innerHTML=`<div class="err">❌ ${err?.message||'Falha ao carregar lançamentos'}</div>`; });
 }
 
@@ -719,9 +713,8 @@ function carregarAprovacoes(){
         <td class="row-actions">
           <button class="success" style="font-size:12px;padding:6px 10px;min-height:32px;" onclick="decidirAprovacao('${l.id_aprovacao}','APROVADO')">✅ Aprovar</button>
           <button class="danger"  style="font-size:12px;padding:6px 10px;min-height:32px;" onclick="decidirAprovacao('${l.id_aprovacao}','REJEITADO')">❌ Rejeitar</button>
-         </td>
-       </tr>`).join('')}</tbody>
-     </table></div>`;
+        </td>
+      </tr>`).join('')}</tbody></table></div>`;
   },function(err){ wrap.innerHTML=`<div class="err">❌ ${err?.message||'Falha'}</div>`; });
 }
 
@@ -798,8 +791,7 @@ function openOrcamentos(){
             <td>${nomeDepto(o.id_departamento)}</td>
             <td>${nomeIgreja(o.id_igreja)}</td>
             <td style="text-align:right;">${formatMoney(o.valor_orcado)}</td>
-           </tr>`).join('')}</tbody>
-         </table></div>`:'<div class="info">ℹ️ Sem orçamentos registados.</div>');
+          </tr>`).join('')}</tbody></table></div>`:'<div class="info">ℹ️ Sem orçamentos registados.</div>');
     },function(err){ const w=document.getElementById('orcResumoWrap'); if(w) w.innerHTML=`<div class="err">❌ ${err?.message}</div>`; });
   });
 }
@@ -943,14 +935,13 @@ function tabelaRubricas(linhas,res){
       <td style="text-align:right;color:#28a745;">${formatMoney(l.entrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(l.saida)}</td>
       <td style="text-align:right;font-weight:700;color:${Number(l.saldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(l.saldo)}</td>
-     </tr>`).join('')}</tbody>
+    </tr>`).join('')}</tbody>
     <tfoot><tr style="border-top:2px solid #dee2e6;font-weight:700;background:#f8f9fa;">
       <td colspan="3">TOTAL</td>
       <td style="text-align:right;color:#28a745;">${formatMoney(res.totalEntrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(res.totalSaida)}</td>
       <td style="text-align:right;color:${Number(res.totalSaldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(res.totalSaldo)}</td>
-     </tr></tfoot>
-   </table></div>`;
+    </tr></tfoot></table></div>`;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -987,6 +978,8 @@ function adminTab(tab){
 /* ── Perfis & Aprovações ── */
 function adminPerfis(){
   const wrap=document.getElementById('adminContentWrap');
+
+
 
   const perfis = [
     {
@@ -1080,18 +1073,18 @@ function adminPerfis(){
               <td>
                 <div style="font-weight:700;font-size:14px;">${p.icon} ${p.nome}</div>
                 <div style="font-size:11px;color:#6c757d;margin-top:2px;font-family:monospace;">${p.id}</div>
-               </td>
+              </td>
               <td><span style="background:${p.scopeColor}18;color:${p.scopeColor};padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;">${p.scope}</span></td>
               <td>
                 <div style="display:flex;flex-wrap:wrap;gap:4px;">
                   ${p.modulos.map(m=>`<span class="badge badge-info" style="font-size:10px;">${m}</span>`).join('')}
                 </div>
-               </td>
+              </td>
               <td style="text-align:center;">${p.podeSubmeter?'<span class="badge badge-success">✅ Sim</span>':'<span class="badge badge-danger">❌ Não</span>'}</td>
               <td>
                 <span style="background:${p.aprovacaoCor}18;color:${p.aprovacaoCor};padding:4px 8px;border-radius:6px;font-size:12px;">${p.aprovacao}</span>
-               </td>
-            </table>`).join('')}
+              </td>
+            </tr>`).join('')}
           </tbody>
         </table>
       </div>
@@ -1172,15 +1165,15 @@ function adminPerfis(){
             ${i===0?`<td rowspan="${grupos[perfil].length}" style="font-weight:700;vertical-align:top;padding-top:14px;white-space:nowrap;">
               <span style="font-size:13px;">${perfis.find(p=>p.id===perfil)?.icon||'👤'} ${perfis.find(p=>p.id===perfil)?.nome||perfil}</span><br>
               <span style="font-size:10px;color:#6c757d;font-family:monospace;">${perfil}</span>
-             </td>`:''}
+            </td>`:''}
             <td>${safeText(u.nome_completo)}</td>
             <td style="font-family:monospace;font-size:12px;">${safeText(u.username)}</td>
             <td>${safeText(resolveIgreja(u))}</td>
             <td>${safeText(resolveDepto(u))}</td>
             <td>${u.activo!==false&&String(u.activo||'').toUpperCase()!=='FALSE'?'<span class="badge badge-success">✅ Activo</span>':'<span class="badge badge-danger">🚫 Inactivo</span>'}</td>
-           </tr>`)
+          </tr>`)
         ).join('')}</tbody>
-       </table></div>`;
+      </table></div>`;
     },function(err){ const w=document.getElementById('perfisUtilWrap'); if(w) w.innerHTML=`<div class="err">❌ ${err?.message}</div>`; });
   });
 }
@@ -1222,10 +1215,8 @@ function adminUtilizadores(){
             <td class="row-actions">
               <button class="${activo?'danger':'success'}" style="font-size:12px;padding:6px 10px;min-height:32px;"
                 onclick="toggleUtilizador('${u.id_utilizador}')">${activo?'🚫 Desactivar':'✅ Activar'}</button>
-             </td>
-           </tr>`;
-        }).join('')}</tbody>
-       </table></div>`;
+            </td></tr>`;
+        }).join('')}</tbody></table></div>`;
     },function(err){ const w=document.getElementById('utilTableWrap'); if(w) w.innerHTML=`<div class="err">❌ ${err?.message}</div>`; });
   });
 }
@@ -1327,10 +1318,8 @@ function adminDepartamentos(){
           <td class="row-actions">
             <button class="${activo?'danger':'success'}" style="font-size:12px;padding:6px 10px;min-height:32px;"
               onclick="toggleDepto('${d.id_departamento}')">${activo?'🚫 Desactivar':'✅ Activar'}</button>
-           </td>
-         </tr>`;
-      }).join('')}</tbody>
-    </table></div>`;
+          </td></tr>`;
+      }).join('')}</tbody></table></div>`;
     // invalidar cache para forçar reload de nomes na próxima chamada
     _opts=null;
   },function(err){ const w=document.getElementById('deptoTableWrap'); if(w) w.innerHTML=`<div class="err">❌ ${err?.message}</div>`; });
@@ -1406,10 +1395,8 @@ function adminIgrejas(){
           <td class="row-actions">
             <button class="${activa?'danger':'success'}" style="font-size:12px;padding:6px 10px;min-height:32px;"
               onclick="toggleIgreja('${g.id_igreja}')">${activa?'🚫 Desactivar':'✅ Activar'}</button>
-           </td>
-         </tr>`;
-      }).join('')}</tbody>
-    </table></div>`;
+          </td></tr>`;
+      }).join('')}</tbody></table></div>`;
     _opts=null;
   },function(err){ const w=document.getElementById('igrejaTableWrap'); if(w) w.innerHTML=`<div class="err">❌ ${err?.message}</div>`; });
 }
@@ -1459,430 +1446,6 @@ function toggleIgreja(id){
     serverCall('Igreja_toggleActive',[id],function(){ invalidarCache(); adminIgrejas(); },
       function(err){ mostrarErro(err?.message||'Falha'); });
   });
-}
-
-/* ══════════════════════════════════════════════════════
-   TOUR GUIADO (sem escurecer ecrã)
-══════════════════════════════════════════════════════ */
-
-let currentStep = 0;
-let tourActive = false;
-let currentHighlightElement = null;
-
-// Passos do tour com os elementos a destacar
-const tourSteps = [
-  {
-    title: "🎓 Bem-vindo ao Sistema Financeiro Distrital",
-    description: "Este tour vai guiá-lo pelas principais funcionalidades do sistema. Clique em 'Próximo' para continuar.",
-    element: null,
-    position: "center"
-  },
-  {
-    title: "📊 Dashboard",
-    description: "Aqui pode ver o resumo financeiro: receitas, despesas, saldo e lançamentos pendentes. Os cards coloridos mostram os valores actualizados.",
-    element: () => document.querySelector('.grid'),
-    position: "top"
-  },
-  {
-    title: "📝 Lançamentos",
-    description: "Nesta secção pode criar novos lançamentos (receitas ou despesas), anexar comprovativos e submeter para aprovação.",
-    element: () => {
-      const items = document.querySelectorAll('#menuList li');
-      return Array.from(items).find(li => li.textContent.includes('Lançamento'));
-    },
-    position: "right"
-  },
-  {
-    title: "✓ Aprovações",
-    description: "Acompanhe o fluxo de aprovação em 2 níveis: Tesoureiro Distrital (Nível 1) e Administrador Geral (Nível 2).",
-    element: () => {
-      const items = document.querySelectorAll('#menuList li');
-      return Array.from(items).find(li => li.textContent.includes('Aprovação'));
-    },
-    position: "right"
-  },
-  {
-    title: "📈 Orçamentos e Relatórios",
-    description: "Visualize orçamentos por rubrica e gere relatórios financeiros filtrando por mês e ano.",
-    element: () => {
-      const items = document.querySelectorAll('#menuList li');
-      return Array.from(items).find(li => li.textContent.includes('Orçamento'));
-    },
-    position: "right"
-  },
-  {
-    title: "⚙️ Administração",
-    description: "Gestão completa de utilizadores, perfis, departamentos e igrejas. Apenas para administradores.",
-    element: () => {
-      const items = document.querySelectorAll('#menuList li');
-      return Array.from(items).find(li => li.textContent.includes('Administração'));
-    },
-    position: "right"
-  },
-  {
-    title: "🎉 Tour Concluído!",
-    description: "Agora já conhece as principais funcionalidades. Explore o sistema à vontade. Use o botão 🔊 para ouvir explicação detalhada.",
-    element: null,
-    position: "center"
-  }
-];
-
-function startTour() {
-  if (tourActive) return;
-  tourActive = true;
-  currentStep = 0;
-  showTourStep(0);
-}
-
-function closeTour() {
-  tourActive = false;
-  // Remover tooltip se existir
-  const existingTooltip = document.querySelector('.tour-tooltip');
-  if (existingTooltip) existingTooltip.remove();
-  // Remover highlight
-  if (currentHighlightElement) {
-    currentHighlightElement.classList.remove('tour-highlight');
-    currentHighlightElement = null;
-  }
-  // Remover overlay se existir (apenas para central)
-  const overlay = document.querySelector('.tour-overlay');
-  if (overlay) overlay.remove();
-}
-
-function showTourStep(step) {
-  // Remover tooltip anterior
-  const existingTooltip = document.querySelector('.tour-tooltip');
-  if (existingTooltip) existingTooltip.remove();
-  
-  // Remover highlight anterior
-  if (currentHighlightElement) {
-    currentHighlightElement.classList.remove('tour-highlight');
-    currentHighlightElement = null;
-  }
-  
-  // Remover overlay
-  const overlay = document.querySelector('.tour-overlay');
-  if (overlay) overlay.remove();
-  
-  const stepData = tourSteps[step];
-  if (!stepData) return;
-  
-  // Narrar o passo
-  narrateStepMZ(step);
-  
-  if (stepData.element === null || step === 0 || step === tourSteps.length - 1) {
-    // Modo central (sem elemento específico)
-    showCenterTooltip(stepData.title, stepData.description, step);
-  } else {
-    // Destacar elemento específico
-    const element = stepData.element();
-    if (element && element.isConnected) {
-      currentHighlightElement = element;
-      element.classList.add('tour-highlight');
-      showTooltipNearElement(element, stepData.title, stepData.description, step, stepData.position);
-    } else {
-      // Se elemento não existe, mostra central
-      showCenterTooltip(stepData.title, stepData.description, step);
-    }
-  }
-}
-
-function showCenterTooltip(title, description, step) {
-  // Criar um overlay suave (não muito escuro) apenas para dar foco
-  const overlay = document.createElement('div');
-  overlay.className = 'tour-overlay-light';
-  overlay.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 9998;
-    pointer-events: none;
-  `;
-  document.body.appendChild(overlay);
-  
-  const tooltip = document.createElement('div');
-  tooltip.className = 'tour-tooltip tour-tooltip-center';
-  tooltip.innerHTML = `
-    <div class="tour-tooltip-header">
-      <span class="tour-tooltip-icon">${title.charAt(0)}</span>
-      <h4>${title}</h4>
-    </div>
-    <div class="tour-tooltip-body">
-      <p>${description}</p>
-      <div class="tour-progress">Passo ${step + 1} de ${tourSteps.length}</div>
-    </div>
-    <div class="tour-tooltip-footer">
-      <button class="tour-btn-skip" onclick="closeTour()">✖ Fechar</button>
-      <button class="tour-btn-prev" ${step === 0 ? 'disabled' : ''} onclick="tourPrev()">◀ Anterior</button>
-      <button class="tour-btn-next" onclick="tourNext()">${step === tourSteps.length - 1 ? '✅ Concluir' : 'Próximo ▶'}</button>
-    </div>
-  `;
-  tooltip.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    border-radius: 20px;
-    max-width: 380px;
-    width: 85%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    z-index: 9999;
-    overflow: hidden;
-    animation: slideUp 0.3s ease;
-  `;
-  document.body.appendChild(tooltip);
-  
-  // Guardar overlay para remover depois
-  window.currentOverlay = overlay;
-}
-
-function showTooltipNearElement(element, title, description, step, position = 'right') {
-  const rect = element.getBoundingClientRect();
-  
-  const tooltip = document.createElement('div');
-  tooltip.className = 'tour-tooltip';
-  tooltip.innerHTML = `
-    <div class="tour-tooltip-header">
-      <span class="tour-tooltip-icon">🎓</span>
-      <h4>${title}</h4>
-    </div>
-    <div class="tour-tooltip-body">
-      <p>${description}</p>
-      <div class="tour-progress">Passo ${step + 1} de ${tourSteps.length}</div>
-    </div>
-    <div class="tour-tooltip-footer">
-      <button class="tour-btn-skip" onclick="closeTour()">✖ Fechar</button>
-      <button class="tour-btn-prev" onclick="tourPrev()">◀ Anterior</button>
-      <button class="tour-btn-next" onclick="tourNext()">Próximo ▶</button>
-    </div>
-  `;
-  
-  // Posicionar tooltip
-  let top, left;
-  switch (position) {
-    case 'right':
-      top = rect.top + (rect.height / 2) - 60;
-      left = rect.right + 15;
-      if (left + 320 > window.innerWidth) {
-        left = rect.left - 335;
-      }
-      break;
-    case 'left':
-      top = rect.top + (rect.height / 2) - 60;
-      left = rect.left - 335;
-      break;
-    case 'top':
-      top = rect.top - 130;
-      left = rect.left + (rect.width / 2) - 160;
-      break;
-    case 'bottom':
-      top = rect.bottom + 15;
-      left = rect.left + (rect.width / 2) - 160;
-      break;
-    default:
-      top = rect.top;
-      left = rect.right + 15;
-  }
-  
-  // Ajustar para não sair do ecrã
-  top = Math.max(10, Math.min(top, window.innerHeight - 250));
-  left = Math.max(10, Math.min(left, window.innerWidth - 330));
-  
-  tooltip.style.cssText = `
-    position: fixed;
-    top: ${top}px;
-    left: ${left}px;
-    background: #fff;
-    border-radius: 20px;
-    max-width: 320px;
-    width: 100%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    z-index: 9999;
-    overflow: hidden;
-    animation: fadeIn 0.3s ease;
-  `;
-  
-  document.body.appendChild(tooltip);
-  
-  // Scroll para o elemento se necessário
-  if (rect.top < 50 || rect.bottom > window.innerHeight - 50) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-}
-
-function tourNext() {
-  if (currentStep < tourSteps.length - 1) {
-    currentStep++;
-    showTourStep(currentStep);
-  } else {
-    closeTour();
-    showMessage('🎓 Tour concluído! Explore o sistema à vontade.', true);
-  }
-}
-
-function tourPrev() {
-  if (currentStep > 0) {
-    currentStep--;
-    showTourStep(currentStep);
-  }
-}
-
-function narrateStepMZ(step) {
-  const textsMZ = [
-    "Bem-vindo ao Sistema Financeiro Distrital de Moçambique. Este tour vai explicar as principais funcionalidades do sistema.",
-    "No painel de controle, acompanhe as receitas, despesas, saldo e lançamentos pendentes da sua igreja ou departamento.",
-    "Na secção de Lançamentos, pode criar novos registos financeiros, anexar comprovativos e submeter para aprovação.",
-    "Nas Aprovações, o fluxo funciona em dois níveis: Tesoureiro Distrital aprova primeiro, depois o Administrador Geral.",
-    "Nos Orçamentos e Relatórios, pode visualizar orçamentos por rubrica e gerar relatórios financeiros detalhados.",
-    "Na Administração, gere utilizadores, perfis, departamentos e igrejas. Esta secção é apenas para administradores.",
-    "Parabéns! Concluiu o tour. Agora pode explorar o sistema. Clique no botão verde para ouvir explicação completa."
-  ];
-  
-  if (window.speechSynthesis && textsMZ[step]) {
-    // Parar qualquer narração anterior
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(textsMZ[step]);
-    utterance.lang = 'pt-MZ'; // Português de Moçambique
-    utterance.rate = 0.85;
-    utterance.pitch = 1.0;
-    
-    // Tentar encontrar voz portuguesa
-    const setVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT' || v.lang.startsWith('pt'));
-      if (ptVoice) utterance.voice = ptVoice;
-    };
-    setVoice();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = setVoice;
-    }
-    
-    window.speechSynthesis.speak(utterance);
-  }
-}
-
-/* ══════════════════════════════════════════════════════
-   ÁUDIO EXPLICATIVO (Português de Moçambique)
-══════════════════════════════════════════════════════ */
-
-let isSpeakingMZ = false;
-
-function playAudioExplanation() {
-  if (isSpeakingMZ) {
-    window.speechSynthesis.cancel();
-    isSpeakingMZ = false;
-    const btn = document.getElementById('audioFab');
-    if (btn) {
-      btn.style.opacity = '1';
-      btn.innerHTML = '🔊';
-      btn.title = 'Explicação em áudio';
-    }
-    return;
-  }
-  
-  const explanationTextMZ = `
-    Bem-vindo ao Sistema Financeiro Distrital de Moçambique.
-    
-    Este sistema foi desenvolvido para gerir as finanças de igrejas e departamentos a nível distrital.
-    
-    O fluxo principal de utilização é o seguinte:
-    
-    Primeiro: faça login com o seu username e palavra-passe fornecidos pelo administrador.
-    
-    Segundo: No Dashboard, pode visualizar o resumo financeiro incluindo receitas aprovadas, despesas aprovadas, saldo actual, e a quantidade de lançamentos pendentes, rascunhos e rejeitados.
-    
-    Terceiro: Na secção de Lançamentos, pode criar novos registos. Escolha entre receita ou despesa, preencha a data, valor, departamento, rubrica, grupo, conta e descrição. Pode anexar comprovativos em formato PDF ou imagem com tamanho máximo de 10 megabytes. Depois pode guardar como rascunho ou submeter directamente para aprovação.
-    
-    Quarto: Nas Aprovações, o sistema usa um fluxo de dois níveis. O Tesoureiro Distrital faz a primeira aprovação. Se aprovado, o Administrador Geral faz a segunda aprovação. Se for rejeitado, é necessário indicar o motivo.
-    
-    Quinto: Nos Orçamentos, pode visualizar os valores orçados por rubrica, departamento e igreja.
-    
-    Sexto: Nos Relatórios, pode gerar relatórios financeiros por departamento ou por rubrica, filtrando por mês e ano.
-    
-    Sétimo: Na Administração, apenas utilizadores com perfil de administrador podem gerir utilizadores, perfis, departamentos e igrejas.
-    
-    Cada perfil tem permissões específicas: Tesoureiro Local vê apenas a sua igreja. Responsável Departamental vê apenas o seu departamento. Tesoureiro Distrital e Administrador Geral vêem todos os dados.
-    
-    Para mais informações, contacte o suporte técnico.
-  `;
-  
-  if (!window.speechSynthesis) {
-    mostrarErro('O seu navegador não suporta síntese de voz. Use Chrome, Edge ou Safari.');
-    return;
-  }
-  
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(explanationTextMZ);
-  utterance.lang = 'pt-MZ';
-  utterance.rate = 0.85;
-  utterance.pitch = 1.0;
-  utterance.volume = 1;
-  
-  // Configurar voz portuguesa
-  const setVoice = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT' || (v.lang.startsWith('pt') && v.lang.includes('PT')));
-    if (ptVoice) utterance.voice = ptVoice;
-  };
-  setVoice();
-  if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = setVoice;
-  }
-  
-  utterance.onstart = () => {
-    isSpeakingMZ = true;
-    const btn = document.getElementById('audioFab');
-    if (btn) {
-      btn.style.opacity = '0.7';
-      btn.innerHTML = '⏹️';
-      btn.title = 'Parar explicação';
-    }
-    showMessage('🎤 A explicar o funcionamento do sistema em Português de Moçambique...', true);
-  };
-  
-  utterance.onend = () => {
-    isSpeakingMZ = false;
-    const btn = document.getElementById('audioFab');
-    if (btn) {
-      btn.style.opacity = '1';
-      btn.innerHTML = '🔊';
-      btn.title = 'Explicação em áudio';
-    }
-  };
-  
-  utterance.onerror = () => {
-    isSpeakingMZ = false;
-    mostrarErro('Erro ao reproduzir áudio. Tente novamente.');
-  };
-  
-  window.speechSynthesis.speak(utterance);
-}
-
-let hasShownWelcomeMZ = false;
-
-function showWelcomeAudioMZ() {
-  if (hasShownWelcomeMZ) return;
-  hasShownWelcomeMZ = true;
-  
-  setTimeout(() => {
-    const welcomeMsg = `Bem-vindo ao Sistema Financeiro Distrital de Moçambique. Clique no botão verde com o altifalante para ouvir uma explicação completa do sistema em Português de Moçambique.`;
-    const utterance = new SpeechSynthesisUtterance(welcomeMsg);
-    utterance.lang = 'pt-MZ';
-    utterance.rate = 0.85;
-    
-    const setVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const ptVoice = voices.find(v => v.lang === 'pt-MZ' || v.lang === 'pt-PT');
-      if (ptVoice) utterance.voice = ptVoice;
-    };
-    setVoice();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = setVoice;
-    }
-    
-    window.speechSynthesis.speak(utterance);
-  }, 2000);
 }
 
 /* ══════════════════════════════════════════════════════
