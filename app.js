@@ -311,15 +311,17 @@ function loadDashDeptos(){
 
 function tabelaDeptos(linhas,res){
   return `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table>
-    <thead><tr><th>Departamento</th><th style="text-align:right;">Entradas</th><th style="text-align:right;">Saídas</th><th style="text-align:right;">Saldo</th></tr></thead>
+    <thead><tr><th>Departamento</th><th style="text-align:right;">Saldo inicial</th><th style="text-align:right;">Entradas</th><th style="text-align:right;">Saídas</th><th style="text-align:right;">Saldo</th></tr></thead>
     <tbody>${linhas.map(l=>`<tr>
       <td><strong>${safeText(l.nome_departamento)}</strong></td>
+      <td style="text-align:right;">${formatMoney(l.saldo_inicial||0)}</td>
       <td style="text-align:right;color:#28a745;">${formatMoney(l.entrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(l.saida)}</td>
       <td style="text-align:right;font-weight:700;color:${Number(l.saldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(l.saldo)}</td>
     </tr>`).join('')}</tbody>
     <tfoot><tr style="border-top:2px solid #dee2e6;font-weight:700;background:#f8f9fa;">
       <td>TOTAL</td>
+      <td style="text-align:right;">${formatMoney(res.totalInicial||0)}</td>
       <td style="text-align:right;color:#28a745;">${formatMoney(res.totalEntrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(res.totalSaida)}</td>
       <td style="text-align:right;color:${Number(res.totalSaldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(res.totalSaldo)}</td>
@@ -927,17 +929,19 @@ function resumoCards(res){
 function tabelaRubricas(linhas,res){
   return `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table>
     <thead><tr><th>Grupo</th><th>Rubrica</th><th>Tipo</th>
-    <th style="text-align:right;">Entradas</th><th style="text-align:right;">Saídas</th><th style="text-align:right;">Saldo</th></tr></thead>
+    <th style="text-align:right;">Saldo inicial</th><th style="text-align:right;">Entradas</th><th style="text-align:right;">Saídas</th><th style="text-align:right;">Saldo</th></tr></thead>
     <tbody>${linhas.map(l=>`<tr>
       <td>${safeText(l.nome_grupo)}</td>
       <td><strong>${safeText(l.nome_rubrica)}</strong></td>
       <td style="white-space:nowrap;">${l.tipo_movimento==='RECEITA'?'📈 Receita':l.tipo_movimento==='DESPESA'?'📉 Despesa':'-'}</td>
+      <td style="text-align:right;">${formatMoney(l.saldo_inicial||0)}</td>
       <td style="text-align:right;color:#28a745;">${formatMoney(l.entrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(l.saida)}</td>
       <td style="text-align:right;font-weight:700;color:${Number(l.saldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(l.saldo)}</td>
     </tr>`).join('')}</tbody>
     <tfoot><tr style="border-top:2px solid #dee2e6;font-weight:700;background:#f8f9fa;">
       <td colspan="3">TOTAL</td>
+      <td style="text-align:right;">${formatMoney(res.totalInicial||0)}</td>
       <td style="text-align:right;color:#28a745;">${formatMoney(res.totalEntrada)}</td>
       <td style="text-align:right;color:#dc3545;">${formatMoney(res.totalSaida)}</td>
       <td style="text-align:right;color:${Number(res.totalSaldo||0)>=0?'#28a745':'#dc3545'};">${formatMoney(res.totalSaldo)}</td>
@@ -961,11 +965,13 @@ function openAdministracao(){
         <h3>🏢 Departamentos</h3><p class="muted">Gerir departamentos.</p></div>
       <div class="box" style="margin-top:0;cursor:pointer;border:2px solid transparent;" onclick="adminTab('igrejas')" id="tab_igrejas">
         <h3>⛪ Igrejas</h3><p class="muted">Gerir igrejas e entidades.</p></div>
+      <div class="box" style="margin-top:0;cursor:pointer;border:2px solid transparent;" onclick="adminTab('saldos')" id="tab_saldos">
+        <h3>💰 Saldos Iniciais</h3><p class="muted">Migrar saldos por departamento e rubrica.</p></div>
     </div>
     <div id="adminContentWrap" style="margin-top:4px;"></div>`;
 }
 function adminTab(tab){
-  ['utilizadores','perfis','departamentos','igrejas'].forEach(t=>{
+  ['utilizadores','perfis','departamentos','igrejas','saldos'].forEach(t=>{
     const el=document.getElementById('tab_'+t);
     if(el) el.style.borderColor=t===tab?'#123b7a':'transparent';
   });
@@ -973,6 +979,7 @@ function adminTab(tab){
   if(tab==='perfis')        adminPerfis();
   if(tab==='departamentos') adminDepartamentos();
   if(tab==='igrejas')       adminIgrejas();
+  if(tab==='saldos')        adminSaldosIniciais();
 }
 
 /* ── Perfis & Aprovações ── */
@@ -1463,3 +1470,156 @@ document.addEventListener('DOMContentLoaded',function(){
   if(pwd) pwd.addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
   if(usr) usr.addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
 });
+
+/* ── Saldos Iniciais ── */
+function adminSaldosIniciais(){
+  const wrap=document.getElementById('adminContentWrap');
+  wrap.innerHTML=`<div class="box" style="margin-top:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <strong>💰 Saldos Iniciais de Migração</strong>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="info" style="width:auto;margin-top:0;padding:9px 18px;" onclick="carregarSaldosIniciais()">🔄 Actualizar</button>
+        <button class="success" style="width:auto;margin-top:0;padding:9px 18px;" onclick="guardarSaldosIniciais()">💾 Guardar saldos</button>
+      </div>
+    </div>
+    <div class="info" style="margin-bottom:14px;">Introduza aqui os saldos de abertura que vêm do sistema antigo. Estes valores passam a contar no saldo do dashboard e nos resumos por departamento e rubrica.</div>
+    <div id="msgSaldoIni" class="msg" style="margin-bottom:10px;"></div>
+    <div class="section-grid">
+      <div>
+        <label>➕ Adicionar saldo por departamento</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="si_depto_sel" style="flex:2;min-width:220px;"><option value="">A carregar...</option></select>
+          <input id="si_depto_valor" type="number" step="0.01" placeholder="Valor" style="flex:1;min-width:140px;">
+          <button class="secondary" style="width:auto;margin-top:0;padding:10px 16px;" onclick="adicionarLinhaSaldoInicial('DEPARTAMENTO')">Adicionar</button>
+        </div>
+      </div>
+      <div>
+        <label>➕ Adicionar saldo por rubrica</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="si_rubrica_sel" style="flex:2;min-width:220px;"><option value="">A carregar...</option></select>
+          <input id="si_rubrica_valor" type="number" step="0.01" placeholder="Valor" style="flex:1;min-width:140px;">
+          <button class="secondary" style="width:auto;margin-top:0;padding:10px 16px;" onclick="adicionarLinhaSaldoInicial('RUBRICA')">Adicionar</button>
+        </div>
+      </div>
+    </div>
+    <hr class="soft">
+    <div class="section-grid">
+      <div>
+        <strong style="display:block;margin-bottom:10px;">🏢 Departamentos</strong>
+        <div id="saldoDeptosWrap" class="muted">A carregar...</div>
+      </div>
+      <div>
+        <strong style="display:block;margin-bottom:10px;">🏷️ Rubricas</strong>
+        <div id="saldoRubricasWrap" class="muted">A carregar...</div>
+      </div>
+    </div>
+  </div>`;
+  serverCall('SaldoInicial_getFormOptions',[],function(res){
+    window._saldoIniOpts=res||{};
+    const sd=document.getElementById('si_depto_sel');
+    if(sd){
+      sd.innerHTML='<option value="">Seleccione departamento</option>'+((res?.departamentos||[]).map(d=>`<option value="${d.id_departamento}">${safeText(d.nome_departamento)}</option>`).join(''));
+    }
+    const sr=document.getElementById('si_rubrica_sel');
+    if(sr){
+      sr.innerHTML='<option value="">Seleccione rubrica</option>'+((res?.rubricas||[]).map(r=>`<option value="${r.id_rubrica}">${safeText(r.nome_rubrica)}</option>`).join(''));
+    }
+    carregarSaldosIniciais();
+  },function(err){
+    showMessage('❌ '+(err?.message||'Erro ao carregar opções'),false,'msgSaldoIni');
+  });
+}
+
+function carregarSaldosIniciais(){
+  const w1=document.getElementById('saldoDeptosWrap');
+  const w2=document.getElementById('saldoRubricasWrap');
+  if(w1) w1.innerHTML='⏳ A carregar...';
+  if(w2) w2.innerHTML='⏳ A carregar...';
+  serverCall('SaldoInicial_listAll',[],function(rows){
+    window._saldoInicialRows=Array.isArray(rows)?rows:[];
+    renderSaldosIniciais();
+  },function(err){
+    if(w1) w1.innerHTML=`<div class="err">❌ ${err?.message||'Falha'}</div>`;
+    if(w2) w2.innerHTML=`<div class="err">❌ ${err?.message||'Falha'}</div>`;
+  });
+}
+
+function renderSaldosIniciais(){
+  const rows=Array.isArray(window._saldoInicialRows)?window._saldoInicialRows:[];
+  const deptos=rows.filter(r=>String(r.tipo_dimensao||'').toUpperCase()==='DEPARTAMENTO');
+  const rubs=rows.filter(r=>String(r.tipo_dimensao||'').toUpperCase()==='RUBRICA');
+  const w1=document.getElementById('saldoDeptosWrap');
+  const w2=document.getElementById('saldoRubricasWrap');
+  if(w1){
+    w1.innerHTML=deptos.length?`<div style="overflow-x:auto;"><table>
+      <thead><tr><th>Departamento</th><th style="text-align:right;">Saldo inicial</th><th>Acção</th></tr></thead>
+      <tbody>${deptos.map(r=>`<tr>
+        <td>${safeText(r.nome_departamento)}</td>
+        <td style="text-align:right;"><input type="number" step="0.01" value="${Number(r.valor_inicial||0)}" data-idx="${rows.indexOf(r)}" data-kind="valor" style="padding:8px 10px;"></td>
+        <td><button class="danger" style="width:auto;margin-top:0;padding:8px 12px;" onclick="removerLinhaSaldoInicial(${rows.indexOf(r)})">Remover</button></td>
+      </tr>`).join('')}</tbody></table></div>`:'<div class="info">ℹ️ Sem saldos iniciais por departamento.</div>';
+  }
+  if(w2){
+    w2.innerHTML=rubs.length?`<div style="overflow-x:auto;"><table>
+      <thead><tr><th>Grupo</th><th>Rubrica</th><th style="text-align:right;">Saldo inicial</th><th>Acção</th></tr></thead>
+      <tbody>${rubs.map(r=>`<tr>
+        <td>${safeText(r.nome_grupo)}</td>
+        <td>${safeText(r.nome_rubrica)}</td>
+        <td style="text-align:right;"><input type="number" step="0.01" value="${Number(r.valor_inicial||0)}" data-idx="${rows.indexOf(r)}" data-kind="valor" style="padding:8px 10px;"></td>
+        <td><button class="danger" style="width:auto;margin-top:0;padding:8px 12px;" onclick="removerLinhaSaldoInicial(${rows.indexOf(r)})">Remover</button></td>
+      </tr>`).join('')}</tbody></table></div>`:'<div class="info">ℹ️ Sem saldos iniciais por rubrica.</div>';
+  }
+}
+
+function adicionarLinhaSaldoInicial(tipo){
+  window._saldoInicialRows=Array.isArray(window._saldoInicialRows)?window._saldoInicialRows:[];
+  if(tipo==='DEPARTAMENTO'){
+    const id=document.getElementById('si_depto_sel')?.value||'';
+    const valor=Number(document.getElementById('si_depto_valor')?.value||0);
+    if(!id){ showMessage('❌ Seleccione o departamento.',false,'msgSaldoIni'); return; }
+    const nome=((window._saldoIniOpts?.departamentos||[]).find(d=>String(d.id_departamento)===String(id))||{}).nome_departamento||id;
+    const existing=window._saldoInicialRows.find(r=>String(r.tipo_dimensao).toUpperCase()==='DEPARTAMENTO' && String(r.id_departamento)===String(id));
+    if(existing){ existing.valor_inicial=valor; }
+    else window._saldoInicialRows.push({tipo_dimensao:'DEPARTAMENTO',id_departamento:id,nome_departamento:nome,valor_inicial:valor});
+    document.getElementById('si_depto_valor').value='';
+  } else {
+    const id=document.getElementById('si_rubrica_sel')?.value||'';
+    const valor=Number(document.getElementById('si_rubrica_valor')?.value||0);
+    if(!id){ showMessage('❌ Seleccione a rubrica.',false,'msgSaldoIni'); return; }
+    const rub=((window._saldoIniOpts?.rubricas||[]).find(r=>String(r.id_rubrica)===String(id))||{});
+    const grp=((window._saldoIniOpts?.grupos||[]).find(g=>String(g.id_grupo)===String(rub.id_grupo||''))||{});
+    const existing=window._saldoInicialRows.find(r=>String(r.tipo_dimensao).toUpperCase()==='RUBRICA' && String(r.id_rubrica)===String(id));
+    if(existing){ existing.valor_inicial=valor; }
+    else window._saldoInicialRows.push({tipo_dimensao:'RUBRICA',id_rubrica:id,nome_rubrica:rub.nome_rubrica||id,id_grupo:rub.id_grupo||'',nome_grupo:grp.nome_grupo||'',valor_inicial:valor});
+    document.getElementById('si_rubrica_valor').value='';
+  }
+  renderSaldosIniciais();
+}
+
+function removerLinhaSaldoInicial(idx){
+  window._saldoInicialRows=Array.isArray(window._saldoInicialRows)?window._saldoInicialRows:[];
+  window._saldoInicialRows.splice(idx,1);
+  renderSaldosIniciais();
+}
+
+function guardarSaldosIniciais(){
+  window._saldoInicialRows=Array.isArray(window._saldoInicialRows)?window._saldoInicialRows:[];
+  document.querySelectorAll('#saldoDeptosWrap input[data-kind="valor"], #saldoRubricasWrap input[data-kind="valor"]').forEach(inp=>{
+    const idx=Number(inp.getAttribute('data-idx'));
+    if(window._saldoInicialRows[idx]) window._saldoInicialRows[idx].valor_inicial=Number(inp.value||0);
+  });
+  const itens=window._saldoInicialRows.map(r=>({
+    tipo_dimensao:r.tipo_dimensao,
+    id_departamento:r.id_departamento||'',
+    id_rubrica:r.id_rubrica||'',
+    valor_inicial:Number(r.valor_inicial||0),
+    observacoes:r.observacoes||''
+  }));
+  showMessage('⏳ A guardar saldos iniciais...',true,'msgSaldoIni');
+  serverCall('SaldoInicial_saveBulk',[{itens}],function(res){
+    showMessage(`✅ ${res?.gravados||0} saldo(s) inicial(is) guardado(s)!`,true,'msgSaldoIni');
+    carregarSaldosIniciais();
+  },function(err){
+    showMessage('❌ '+(err?.message||'Falha ao guardar'),false,'msgSaldoIni');
+  });
+}
